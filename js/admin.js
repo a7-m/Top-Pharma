@@ -224,6 +224,7 @@ async function handleAddVideo(e) {
 
     let videoUrl = videoLink;
     let driveId = null;
+    let thumbnailUrl = null;
 
     // Helper to extract Drive ID
     const getDriveId = (url) => {
@@ -256,6 +257,19 @@ async function handleAddVideo(e) {
         const embedUrl = getYouTubeEmbed(videoLink);
         if (embedUrl) {
             videoUrl = embedUrl;
+            // Auto-generate YouTube thumbnail
+            const ytId = videoLink.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|u\/\w\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+            if (ytId) {
+                thumbnailUrl = `https://img.youtube.com/vi/${ytId[1]}/hqdefault.jpg`;
+            }
+        }
+    } else if (videoLink.includes('cloudinary.com')) {
+        // Cloudinary links are typically direct file links
+        videoUrl = videoLink;
+        
+        // Auto-generate thumbnail if it's a direct resource link
+        if (videoLink.includes('/video/upload/')) {
+            thumbnailUrl = videoLink.replace(/\.(mp4|webm|ogg|mov|m4v)$/i, '.jpg');
         }
     }
 
@@ -267,6 +281,11 @@ async function handleAddVideo(e) {
             video_url: videoUrl,
             google_drive_id: driveId,
         };
+        
+        // Only update thumbnail if we generated a new one
+        if (thumbnailUrl) {
+            payload.thumbnail_url = thumbnailUrl;
+        }
 
         let error;
         if (editingId) {
@@ -332,6 +351,9 @@ async function handleAddFile(e) {
             driveId = extractedId;
             fileUrl = `https://drive.google.com/file/d/${driveId}/view`;
         }
+    } else if (fileLink.includes('cloudinary.com')) {
+        // Cloudinary direct file link
+        fileUrl = fileLink;
     }
 
     try {
