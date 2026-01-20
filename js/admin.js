@@ -54,6 +54,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         createQuizForm.addEventListener('submit', handleCreateQuiz);
     }
+
+    // 7. Initialize Google Drive Scripts (if config is present)
+    if (typeof GOOGLE_CLIENT_ID !== 'undefined' && GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID') {
+        loadGoogleScripts().then(() => console.log('Google Scripts Loaded')).catch(console.error);
+    }
+
+    // 8. Handle Upload Source Toggle
+    const uploadRadios = document.querySelectorAll('input[name="uploadSource"]');
+    const uploadLabel = document.getElementById('uploadLabel');
+    if (uploadRadios.length > 0 && uploadLabel) {
+        // Detect context (Video vs File) based on initial label text
+        const isVideo = uploadLabel.textContent.includes('فيديو');
+        const entityName = isVideo ? 'فيديو' : 'ملف';
+
+        uploadRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const source = e.target.value;
+                if (source === 'cloudinary') {
+                    uploadLabel.textContent = `رفع ${entityName} (Cloudinary)`;
+                } else {
+                    uploadLabel.textContent = `رفع ${entityName} (Google Drive)`;
+                }
+            });
+        });
+    }
 });
 
 /**
@@ -225,9 +250,76 @@ async function handleAddVideo(e) {
     let videoUrl = videoLink;
     let driveId = null;
     let thumbnailUrl = null;
+    let cloudinaryId = null;
+
+    // Cloudinary/Drive Upload Logic
+    const fileInput = document.getElementById('videoFile');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const progressText = document.getElementById('uploadProgressText');
+    const progressContainer = document.getElementById('uploadProgressContainer');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Check which source is selected
+    const uploadSource = document.querySelector('input[name="uploadSource"]:checked')?.value || 'cloudinary';
+
+    if (fileInput && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        
+        // Validate file type
+        if (!file.type.startsWith('video/')) {
+            alert('يرجى اختيار ملف فيديو صالح.');
+            return;
+        }
+
+        // Validate file size (e.g., 500MB)
+        const MAX_SIZE = 500 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+            alert('حجم الملف كبير جدًا. الحد الأقصى هو 500 ميجابايت.');
+            return;
+        }
+
+        try {
+            submitBtn.disabled = true;
+            progressContainer.style.display = 'block';
+
+            if (uploadSource === 'cloudinary') {
+                messageEl.textContent = 'جاري رفع الفيديو إلى Cloudinary... يرجى الانتظار';
+                const uploadResult = await uploadToCloudinary(file, (percent) => {
+                    progressBar.value = percent;
+                    progressText.textContent = `${percent}%`;
+                });
+
+                videoUrl = uploadResult.secure_url;
+                cloudinaryId = uploadResult.public_id;
+                
+                // Auto-generate thumbnail
+                thumbnailUrl = videoUrl.replace(/\.[^/.]+$/, ".jpg");
+
+            } else if (uploadSource === 'google') {
+                messageEl.textContent = 'جاري رفع الفيديو إلى Google Drive... (قد يطلب تسجيل الدخول)';
+                
+                const uploadResult = await uploadToGoogleDrive(file, (percent) => {
+                    progressBar.value = percent;
+                    progressText.textContent = `${percent}%`;
+                });
+
+                videoUrl = uploadResult.webViewLink;
+                driveId = uploadResult.id;
+            }
+
+        } catch (uploadError) {
+            console.error(uploadError);
+            messageEl.textContent = 'فشل الرفع: ' + uploadError.message;
+            messageEl.className = 'mt-3 text-center text-danger';
+            submitBtn.disabled = false;
+            progressContainer.style.display = 'none';
+            return;
+        }
+    }
 
     // Helper to extract Drive ID
     const getDriveId = (url) => {
+        if (!url) return null;
         const patterns = [
             /\/d\/([a-zA-Z0-9_-]+)/,
             /id=([a-zA-Z0-9_-]+)/,
@@ -242,19 +334,20 @@ async function handleAddVideo(e) {
 
     // Helper to process YouTube URL
     const getYouTubeEmbed = (url) => {
+        if (!url) return null;
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
         const match = url.match(regExp);
         return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
     };
 
-    if (videoLink.includes('drive.google.com')) {
-        const extractedId = getDriveId(videoLink);
+    if (videoUrl && videoUrl.includes('drive.google.com')) {
+        const extractedId = getDriveId(videoUrl);
         if (extractedId) {
             driveId = extractedId;
             videoUrl = `https://drive.google.com/file/d/${driveId}/preview`;
         }
-    } else if (videoLink.includes('youtube.com') || videoLink.includes('youtu.be')) {
-        const embedUrl = getYouTubeEmbed(videoLink);
+    } else if (videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'))) {
+        const embedUrl = getYouTubeEmbed(videoUrl);
         if (embedUrl) {
             videoUrl = embedUrl;
             // Auto-generate YouTube thumbnail
@@ -262,14 +355,6 @@ async function handleAddVideo(e) {
             if (ytId) {
                 thumbnailUrl = `https://img.youtube.com/vi/${ytId[1]}/hqdefault.jpg`;
             }
-        }
-    } else if (videoLink.includes('cloudinary.com')) {
-        // Cloudinary links are typically direct file links
-        videoUrl = videoLink;
-        
-        // Auto-generate thumbnail if it's a direct resource link
-        if (videoLink.includes('/video/upload/')) {
-            thumbnailUrl = videoLink.replace(/\.(mp4|webm|ogg|mov|m4v)$/i, '.jpg');
         }
     }
 
@@ -280,6 +365,7 @@ async function handleAddVideo(e) {
             category,
             video_url: videoUrl,
             google_drive_id: driveId,
+            cloudinary_id: cloudinaryId // New Field
         };
         
         // Only update thumbnail if we generated a new one
@@ -331,8 +417,63 @@ async function handleAddFile(e) {
 
     let fileUrl = fileLink;
     let driveId = null;
+    let cloudinaryId = null;
+
+    // Cloudinary/Drive Upload Logic
+    const fileInput = document.getElementById('fileInput');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const progressText = document.getElementById('uploadProgressText');
+    const progressContainer = document.getElementById('uploadProgressContainer');
+    const submitBtn = document.querySelector('button[type="submit"]'); // Use generic selector or add ID to button in HTML
+    
+    // Check source
+    // In add-file.html we added radios with name="uploadSource"
+    const uploadSource = document.querySelector('input[name="uploadSource"]:checked')?.value || 'cloudinary';
+
+    if (fileInput && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        
+        try {
+            messageEl.textContent = `جاري رفع الملف إلى ${uploadSource === 'cloudinary' ? 'Cloudinary' : 'Google Drive'}...`;
+            submitBtn.disabled = true;
+            progressContainer.style.display = 'block';
+
+            if (uploadSource === 'cloudinary') {
+                // Determine resource type
+                let resourceType = 'raw';
+                if (file.type.startsWith('image/')) resourceType = 'image';
+                else if (file.type.startsWith('video/')) resourceType = 'video';
+                
+                const uploadResult = await uploadToCloudinary(file, (percent) => {
+                    progressBar.value = percent;
+                    progressText.textContent = `${percent}%`;
+                }, resourceType);
+
+                fileUrl = uploadResult.secure_url;
+                cloudinaryId = uploadResult.public_id;
+                
+            } else if (uploadSource === 'google') {
+                 const uploadResult = await uploadToGoogleDrive(file, (percent) => {
+                    progressBar.value = percent;
+                    progressText.textContent = `${percent}%`;
+                });
+
+                fileUrl = uploadResult.webViewLink;
+                driveId = uploadResult.id;
+            }
+
+        } catch (uploadError) {
+            console.error(uploadError);
+            messageEl.textContent = 'فشل الرفع: ' + uploadError.message;
+            messageEl.className = 'mt-3 text-center text-danger';
+            submitBtn.disabled = false;
+            progressContainer.style.display = 'none';
+            return;
+        }
+    }
 
     const getDriveId = (url) => {
+        if (!url) return null;
         const patterns = [
             /\/d\/([a-zA-Z0-9_-]+)/,
             /id=([a-zA-Z0-9_-]+)/,
@@ -345,15 +486,15 @@ async function handleAddFile(e) {
         return null;
     };
 
-    if (fileLink.includes('drive.google.com')) {
-        const extractedId = getDriveId(fileLink);
+    if (fileUrl && fileUrl.includes('drive.google.com')) {
+        const extractedId = getDriveId(fileUrl);
         if (extractedId) {
             driveId = extractedId;
             fileUrl = `https://drive.google.com/file/d/${driveId}/view`;
         }
-    } else if (fileLink.includes('cloudinary.com')) {
+    } else if (fileUrl && fileUrl.includes('cloudinary.com')) {
         // Cloudinary direct file link
-        fileUrl = fileLink;
+        // fileUrl is already set
     }
 
     try {
@@ -362,7 +503,8 @@ async function handleAddFile(e) {
             description,
             file_type: fileType,
             file_url: fileUrl,
-            google_drive_id: driveId
+            google_drive_id: driveId,
+            cloudinary_id: cloudinaryId
         };
 
         let error;
