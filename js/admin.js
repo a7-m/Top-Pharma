@@ -262,6 +262,8 @@ async function handleAddVideo(e) {
     // Check which source is selected
     const uploadSource = document.querySelector('input[name="uploadSource"]:checked')?.value || 'cloudinary';
 
+    let videoDuration = null;
+
     if (fileInput && fileInput.files.length > 0) {
         const file = fileInput.files[0];
         
@@ -291,9 +293,10 @@ async function handleAddVideo(e) {
 
                 videoUrl = uploadResult.secure_url;
                 cloudinaryId = uploadResult.public_id;
+                videoDuration = uploadResult.duration;
                 
-                // Auto-generate thumbnail
-                thumbnailUrl = videoUrl.replace(/\.[^/.]+$/, ".jpg");
+                // Auto-generate optimized thumbnail
+                thumbnailUrl = videoUrl.replace('/upload/', '/upload/c_fill,w_400,h_225,g_auto,f_jpg/').replace(/\.[^/.]+$/, ".jpg");
 
             } else if (uploadSource === 'google') {
                 messageEl.textContent = 'جاري رفع الفيديو إلى Google Drive... (قد يطلب تسجيل الدخول)';
@@ -305,6 +308,8 @@ async function handleAddVideo(e) {
 
                 videoUrl = uploadResult.webViewLink;
                 driveId = uploadResult.id;
+                thumbnailUrl = uploadResult.thumbnailUrl;
+                videoDuration = uploadResult.duration;
             }
 
         } catch (uploadError) {
@@ -345,13 +350,17 @@ async function handleAddVideo(e) {
         if (extractedId) {
             driveId = extractedId;
             videoUrl = `https://drive.google.com/file/d/${driveId}/preview`;
+            // Set thumbnail for pasted link if not already set by upload
+            if (!thumbnailUrl) {
+                thumbnailUrl = `https://lh3.googleusercontent.com/u/0/d/${driveId}=w400-h225-p`;
+            }
         }
     } else if (videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'))) {
         const embedUrl = getYouTubeEmbed(videoUrl);
         if (embedUrl) {
             videoUrl = embedUrl;
             // Auto-generate YouTube thumbnail
-            const ytId = videoLink.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|u\/\w\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+            const ytId = videoUrl.match(/embed\/([a-zA-Z0-9_-]{11})/);
             if (ytId) {
                 thumbnailUrl = `https://img.youtube.com/vi/${ytId[1]}/hqdefault.jpg`;
             }
@@ -365,10 +374,11 @@ async function handleAddVideo(e) {
             category,
             video_url: videoUrl,
             google_drive_id: driveId,
-            cloudinary_id: cloudinaryId // New Field
+            cloudinary_id: cloudinaryId,
+            duration: videoDuration
         };
         
-        // Only update thumbnail if we generated a new one
+        // Only update thumbnail if we generated/fetched a new one
         if (thumbnailUrl) {
             payload.thumbnail_url = thumbnailUrl;
         }

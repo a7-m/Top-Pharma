@@ -40,7 +40,8 @@ async function uploadToCloudinary(file, onProgress, resourceType = 'video') {
                 const response = JSON.parse(xhr.responseText);
                 resolve({
                     secure_url: response.secure_url,
-                    public_id: response.public_id
+                    public_id: response.public_id,
+                    duration: response.duration ? Math.round(response.duration) : null
                 });
             } else {
                 reject(new Error(`Cloudinary upload failed: ${xhr.statusText}`));

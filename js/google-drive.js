@@ -1,43 +1,44 @@
 /**
  * Google Drive Upload Service
- * wrapper around Google API Client Library
+ * Using Google Identity Services (GIS) and Fetch API
+ * Bypasses GAPI discovery docs to avoid 502 and "missing required fields" errors
  */
 
 let tokenClient;
 let gapiInited = false;
 let gisInited = false;
+let currentAccessToken = null;
 
 /**
  * Load Google API scripts dynamically
  */
 function loadGoogleScripts() {
-    return new Promise((resolve) => {
-        const script1 = document.createElement('script');
-        script1.src = 'https://apis.google.com/js/api.js';
-        script1.onload = () => {
-            gapi.load('client', async () => {
-                await gapi.client.init({
-                    apiKey: GOOGLE_API_KEY,
-                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+    return new Promise((resolve, reject) => {
+        // Load GIS (Google Identity Services)
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.onload = () => {
+            try {
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: GOOGLE_CLIENT_ID,
+                    scope: GOOGLE_SCOPES,
+                    callback: (resp) => {
+                        if (resp.access_token) {
+                            currentAccessToken = resp.access_token;
+                        }
+                    },
                 });
-                gapiInited = true;
-                if (gisInited) resolve();
-            });
+                gisInited = true;
+                gapiInited = true; // Set both to true to satisfy admin.js check
+                console.log('Google Identity Services loaded');
+                resolve();
+            } catch (err) {
+                console.error('Error initializing GIS client:', err);
+                reject(err);
+            }
         };
-        document.body.appendChild(script1);
-
-        const script2 = document.createElement('script');
-        script2.src = 'https://accounts.google.com/gsi/client';
-        script2.onload = () => {
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: GOOGLE_CLIENT_ID,
-                scope: GOOGLE_SCOPES,
-                callback: '', // defined later
-            });
-            gisInited = true;
-            if (gapiInited) resolve();
-        };
-        document.body.appendChild(script2);
+        script.onerror = () => reject(new Error('Failed to load Google Identity Services script'));
+        document.body.appendChild(script);
     });
 }
 
@@ -48,30 +49,29 @@ function requestGoogleAuth() {
     return new Promise((resolve, reject) => {
         if (!tokenClient) return reject('Google Scripts not loaded');
         
-        tokenClient.callback = async (resp) => {
+        tokenClient.callback = (resp) => {
             if (resp.error !== undefined) {
-                reject(resp);
+                return reject(resp);
             }
+            currentAccessToken = resp.access_token;
             resolve(resp);
         };
 
-        // Prompt the user to select an account
-        if (gapi.client.getToken() === null) {
-            tokenClient.requestAccessToken({prompt: 'consent'});
-        } else {
-            tokenClient.requestAccessToken({prompt: ''});
-        }
+        // Always request token, GIS handles expiry/refresh internally or we just prompt
+        // If we want to avoid prompt if already have token, we could check, 
+        // but simple for now:
+        tokenClient.requestAccessToken({ prompt: currentAccessToken ? '' : 'consent' });
     });
 }
 
 /**
- * Upload to Google Drive (Resumable)
+ * Upload to Google Drive (Resumable-ish using Multipart)
  * @param {File} file 
  * @param {Function} onProgress 
  */
 async function uploadToGoogleDrive(file, onProgress) {
-    if (!gapiInited || !gisInited) {
-        throw new Error('Google API not initialized');
+    if (!gisInited) {
+        throw new Error('Google API has not been initialized. Please check your internet connection and verify your Client ID.');
     }
 
     // Ensure we have a valid token
@@ -80,11 +80,9 @@ async function uploadToGoogleDrive(file, onProgress) {
     const metadata = {
         name: file.name,
         mimeType: file.type,
-        // Optional: save in a specific folder if needed
-        // parents: ['FOLDER_ID'] 
     };
 
-    const accessToken = gapi.client.getToken().access_token;
+    const accessToken = currentAccessToken;
 
     return new Promise((resolve, reject) => {
         const form = new FormData();
@@ -92,7 +90,9 @@ async function uploadToGoogleDrive(file, onProgress) {
         form.append('file', file);
 
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,webContentLink');
+        // We use the direct upload endpoint and request specific fields
+        // thumbnailLink is short-lived, so we'll use a permanent-ish URL constructed from ID
+        xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,webContentLink,thumbnailLink,videoMediaMetadata');
         xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
         
         xhr.upload.onprogress = (e) => {
@@ -106,38 +106,72 @@ async function uploadToGoogleDrive(file, onProgress) {
             if (xhr.status === 200) {
                 const response = JSON.parse(xhr.responseText);
                 
-                // IMPORTANT: Make file public to anyone with link so students can view
-                makeFilePublic(response.id).then(() => {
+                // Get duration in seconds if it's a video
+                let duration = null;
+                if (response.videoMediaMetadata && response.videoMediaMetadata.durationMillis) {
+                    duration = Math.round(parseInt(response.videoMediaMetadata.durationMillis) / 1000);
+                }
+
+                // Construct a more stable thumbnail URL
+                // The thumbnailLink expires, but this URL usually works if file is public
+                const stableThumbnail = `https://lh3.googleusercontent.com/u/0/d/${response.id}=w400-h225-p`;
+                // Alternatively: https://drive.google.com/thumbnail?id=${response.id}&sz=w400
+
+                // Make file public to anyone with link
+                makeFilePublic(response.id, accessToken).then(() => {
                     resolve({
                         id: response.id,
                         webViewLink: response.webViewLink,
-                        webContentLink: response.webContentLink
+                        webContentLink: response.webContentLink,
+                        thumbnailUrl: stableThumbnail || response.thumbnailLink,
+                        duration: duration
                     });
                 }).catch(err => {
-                    console.warn('Could not make public', err);
-                    resolve(response); // Return anyway
+                    console.warn('Could not make public automatically', err);
+                    resolve({
+                        ...response,
+                        thumbnailUrl: stableThumbnail || response.thumbnailLink,
+                        duration: duration
+                    });
                 });
 
             } else {
-                reject(new Error('Google Drive Upload Failed: ' + xhr.statusText));
+                console.error('Upload failed', xhr.responseText);
+                reject(new Error(`Google Drive Upload Failed (${xhr.status}): ${xhr.statusText}`));
             }
         };
 
-        xhr.onerror = () => reject(new Error('Network Error'));
+        xhr.onerror = () => reject(new Error('Network Error during upload'));
         
         xhr.send(form);
     });
 }
 
 /**
- * Make file permission "anyone with link"
+ * Make file permission "anyone with link" using direct fetch
  */
-async function makeFilePublic(fileId) {
-    return gapi.client.drive.permissions.create({
-        fileId: fileId,
-        resource: {
-            role: 'reader',
-            type: 'anyone'
+async function makeFilePublic(fileId, accessToken) {
+    try {
+        const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                role: 'reader',
+                type: 'anyone'
+            })
+        });
+        
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error?.message || 'Failed to update permissions');
         }
-    });
+        
+        return await response.json();
+    } catch (err) {
+        console.error('Error making file public:', err);
+        throw err;
+    }
 }
