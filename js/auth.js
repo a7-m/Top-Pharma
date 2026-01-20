@@ -18,20 +18,9 @@ async function signUp(email, password, fullName) {
 
         if (authError) throw authError;
 
-        // Create profile
-        if (authData.user) {
-            const { error: profileError } = await supabaseClient
-                .from('profiles')
-                .insert([
-                    {
-                        id: authData.user.id,
-                        full_name: fullName,
-                        email: email
-                    }
-                ]);
+        // Profile is created automatically by database trigger 'on_auth_user_created'
+        // No need for client-side insert which was causing the duplicate key error
 
-            if (profileError) throw profileError;
-        }
 
         return { data: authData, error: null };
     } catch (error) {
