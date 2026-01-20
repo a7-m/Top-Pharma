@@ -63,6 +63,33 @@
   --transition-slow: 0.5s ease;
 }
 
+/* ===== Dark Theme Variables ===== */
+[data-theme="dark"] {
+  --primary-color: #4a7bc8;
+  --primary-dark: #2c5aa0;
+  --primary-light: #6a96e0;
+
+  --secondary-color: #52c77a;
+  --secondary-dark: #27ae60;
+  --secondary-light: #7ed9a1;
+
+  --dark: #f8f9fa;
+  --gray-dark: #b2bec3;
+  --gray: #dfe6e9;
+  --gray-light: #2d3436;
+  --light: #121212;
+  --white: #1e1e1e;
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.6);
+
+  --success: #52c77a;
+  --warning: #fabe58;
+  --danger: #ff7675;
+  --info: #74b9ff;
+}
+
 /* ===== Global Styles ===== */
 * {
   margin: 0;
@@ -183,6 +210,47 @@ a:hover {
   color: var(--primary-color);
 }
 
+/* ===== Theme Toggle ===== */
+.theme-toggle-container {
+  display: flex;
+  align-items: center;
+  margin-right: var(--spacing-sm);
+}
+
+.theme-toggle-btn {
+  background: var(--light);
+  color: var(--primary-color);
+  border: 1px solid var(--gray-light);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 1.2rem;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--primary-light);
+  color: var(--white);
+  transform: rotate(15deg);
+}
+
+[data-theme="dark"] .theme-toggle-btn {
+  color: #f1c40f;
+  background: #2d3436;
+}
+
+[data-theme="dark"] .option-label {
+  background: #252525;
+}
+
+[data-theme="dark"] .option-label:hover {
+  background: #202020;
+}
+
 /* ===== Buttons ===== */
 .btn {
   display: inline-block;
@@ -243,9 +311,50 @@ a:hover {
   font-size: var(--font-size-lg);
 }
 
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.btn-google {
+  background: white;
+  color: #444;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.btn-google:hover {
+  background: #f8f8f8;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-google img {
+  width: 20px;
+  height: 20px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+  color: var(--gray);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--gray-light);
+}
+
+.divider:not(:empty)::before {
+  margin-left: 0.5em;
+}
+
+.divider:not(:empty)::after {
+  margin-right: 0.5em;
 }
 
 /* ===== Cards ===== */
@@ -260,6 +369,14 @@ a:hover {
 .card:hover {
   transform: translateY(-5px);
   box-shadow: var(--shadow-lg);
+}
+
+.auth-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-light);
 }
 
 .card-grid {

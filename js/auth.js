@@ -39,7 +39,6 @@ async function signIn(email, password) {
         });
 
         if (error) throw error;
-        if (error) throw error;
         
         // Check Role
         const { data: profile } = await supabaseClient
@@ -55,6 +54,25 @@ async function signIn(email, password) {
              window.location.href = 'index.html';
         }
         
+        return { data, error: null };
+    } catch (error) {
+        return { data: null, error };
+    }
+}
+
+/**
+ * Sign in user with Google
+ */
+async function signInWithGoogle() {
+    try {
+        const { data, error } = await supabaseClient.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin + '/index.html'
+            }
+        });
+
+        if (error) throw error;
         return { data, error: null };
     } catch (error) {
         return { data: null, error };
@@ -135,6 +153,16 @@ async function getUserProfile(userId) {
 async function redirectIfAuthenticated() {
     const session = await getSession();
     if (session) {
-        window.location.href = 'dashboard.html';
+        const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+
+        if (profile && profile.role === 'admin') {
+            window.location.href = 'admin/index.html';
+        } else {
+            window.location.href = 'dashboard.html';
+        }
     }
 }

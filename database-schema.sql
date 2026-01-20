@@ -176,7 +176,11 @@ BEGIN
     INSERT INTO public.profiles (id, full_name, email)
     VALUES (
         NEW.id,
-        COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+        COALESCE(
+            NEW.raw_user_meta_data->>'full_name', 
+            NEW.raw_user_meta_data->>'name',
+            ''
+        ),
         NEW.email
     );
     RETURN NEW;
