@@ -50,16 +50,7 @@ async function signIn(email, password) {
         if (profile && profile.role === 'admin') {
             window.location.href = 'admin/index.html';
         } else {
-            // Check subscription status
-            const now = new Date();
-            const paidUntil = profile.paid_until ? new Date(profile.paid_until) : null;
-            
-            if (profile.is_paid && paidUntil && paidUntil > now) {
-                window.location.href = 'index.html';
-            } else {
-                // Not paid or expired
-                window.location.href = 'pricing.html';
-            }
+            window.location.href = 'dashboard.html';
         }
         
         return { data, error: null };
@@ -144,18 +135,6 @@ async function requireAuth() {
         return true;
     }
 
-    // Check subscription status
-    const now = new Date();
-    const paidUntil = profile?.paid_until ? new Date(profile.paid_until) : null;
-    
-    if (!profile?.is_paid || !paidUntil || paidUntil <= now) {
-        // Prevent infinite loop if already on pricing page
-        if (!window.location.href.includes('pricing.html')) {
-            window.location.href = 'pricing.html';
-        }
-        return false;
-    }
-
     return true;
 }
 
@@ -193,18 +172,7 @@ async function redirectIfAuthenticated() {
         if (profile && profile.role === 'admin') {
             window.location.href = 'admin/index.html';
         } else {
-             // Check subscription status
-            const now = new Date();
-            const paidUntil = profile.paid_until ? new Date(profile.paid_until) : null;
-            
-            if (profile.is_paid && paidUntil && paidUntil > now) {
-                window.location.href = 'dashboard.html';
-            } else {
-                 // Prevent infinite loop if already on pricing page
-                 if (!window.location.href.includes('pricing.html')) {
-                    window.location.href = 'pricing.html';
-                 }
-            }
+            window.location.href = 'dashboard.html';
         }
     }
 }
