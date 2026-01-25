@@ -1,6 +1,7 @@
 // js/admin.js
 
 let editingId = null;
+let subjectPaymentsCache = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Check Admin Auth
@@ -55,12 +56,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         createQuizForm.addEventListener('submit', handleCreateQuiz);
     }
 
-    // 7. Initialize Google Drive Scripts (if config is present)
+    // 7. Handle "Subject Payments" Page
+    const subjectPricesBody = document.getElementById('subjectPricesBody');
+    if (subjectPricesBody) {
+        initSubjectPaymentsPage();
+    }
+
+    // 8. Initialize Google Drive Scripts (if config is present)
     if (typeof GOOGLE_CLIENT_ID !== 'undefined' && GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID') {
         loadGoogleScripts().then(() => console.log('Google Scripts Loaded')).catch(console.error);
     }
 
-    // 8. Handle Upload Source Toggle
+    // 9. Handle Upload Source Toggle
     const uploadRadios = document.querySelectorAll('input[name="uploadSource"]');
     const uploadLabel = document.getElementById('uploadLabel');
     if (uploadRadios.length > 0 && uploadLabel) {
@@ -136,6 +143,274 @@ async function loadVideoForEdit(id) {
         console.error(err);
         alert('خطأ في تحميل بيانات الفيديو');
     }
+}
+
+// ================================
+// Subject Prices & Activation Codes
+// ================================
+
+async function initSubjectPaymentsPage() {
+    const subjectPricesBody = document.getElementById('subjectPricesBody');
+    const subjectSelect = document.getElementById('activationSubjectSelect');
+    const addCodeBtn = document.getElementById('addActivationCodeBtn');
+    const generateBtn = document.getElementById('generateActivationCodesBtn');
+
+    try {
+        const subjects = await getAllSubjects();
+        subjectPaymentsCache = subjects;
+        renderSubjectPrices(subjects);
+        renderSubjectOptions(subjects, subjectSelect);
+
+        if (subjectSelect && subjects.length > 0) {
+            subjectSelect.value = subjects[0].id;
+            await loadActivationCodes(subjectSelect.value);
+        }
+    } catch (error) {
+        console.error('Error loading subject payments:', error);
+        showError('حدث خطأ أثناء تحميل بيانات المواد');
+    }
+
+    if (subjectSelect) {
+        subjectSelect.addEventListener('change', async () => {
+            await loadActivationCodes(subjectSelect.value);
+        });
+    }
+
+    if (addCodeBtn) {
+        addCodeBtn.addEventListener('click', handleAddActivationCode);
+    }
+
+    if (generateBtn) {
+        generateBtn.addEventListener('click', handleGenerateActivationCodes);
+    }
+}
+
+function renderSubjectPrices(subjects) {
+    const subjectPricesBody = document.getElementById('subjectPricesBody');
+    if (!subjectPricesBody) return;
+
+    subjectPricesBody.innerHTML = subjects.map(subject => `
+        <tr>
+            <td>
+                <strong>${subject.name_ar}</strong>
+                <div class="text-muted" style="font-size: 0.85rem;">${subject.name_en}</div>
+            </td>
+            <td>
+                <input
+                    type="number"
+                    min="0"
+                    class="form-input subject-price-input"
+                    data-subject-id="${subject.id}"
+                    value="${Number.isFinite(subject.price_egp) ? subject.price_egp : 0}"
+                />
+            </td>
+            <td>
+                <button class="btn btn-primary btn-sm subject-price-save" data-subject-id="${subject.id}">حفظ</button>
+            </td>
+        </tr>
+    `).join('');
+
+    subjectPricesBody.querySelectorAll('.subject-price-save').forEach(button => {
+        button.addEventListener('click', async () => {
+            const subjectId = button.dataset.subjectId;
+            const input = subjectPricesBody.querySelector(`.subject-price-input[data-subject-id="${subjectId}"]`);
+            if (!input) return;
+            const price = Math.max(0, parseInt(input.value, 10) || 0);
+            input.value = price;
+            await updateSubjectPrice(subjectId, price);
+        });
+    });
+}
+
+async function updateSubjectPrice(subjectId, price) {
+    try {
+        const { error } = await supabaseClient
+            .from('subjects')
+            .update({ price_egp: price })
+            .eq('id', subjectId);
+
+        if (error) throw error;
+        showSuccess('تم تحديث سعر المادة بنجاح');
+    } catch (error) {
+        console.error('Error updating subject price:', error);
+        showError('حدث خطأ أثناء تحديث السعر');
+    }
+}
+
+function renderSubjectOptions(subjects, selectEl) {
+    if (!selectEl) return;
+    selectEl.innerHTML = subjects.map(subject => `
+        <option value="${subject.id}">${subject.icon || '📚'} ${subject.name_ar}</option>
+    `).join('');
+}
+
+async function loadActivationCodes(subjectId) {
+    const codesBody = document.getElementById('activationCodesBody');
+    if (!codesBody) return;
+
+    if (!subjectId) {
+        codesBody.innerHTML = '<tr><td colspan="5" class="text-center">اختر مادة لعرض الأكواد.</td></tr>';
+        return;
+    }
+
+    codesBody.innerHTML = '<tr><td colspan="5" class="text-center">جاري تحميل الأكواد...</td></tr>';
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('subject_activation_codes')
+            .select('id, code, is_used, used_at, used_by')
+            .eq('subject_id', subjectId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        renderActivationCodes(data || []);
+    } catch (error) {
+        console.error('Error loading activation codes:', error);
+        codesBody.innerHTML = '<tr><td colspan="5" class="text-center">تعذر تحميل الأكواد.</td></tr>';
+    }
+}
+
+function renderActivationCodes(codes) {
+    const codesBody = document.getElementById('activationCodesBody');
+    if (!codesBody) return;
+
+    if (codes.length === 0) {
+        codesBody.innerHTML = '<tr><td colspan="5" class="text-center">لا توجد أكواد حالياً.</td></tr>';
+        return;
+    }
+
+    codesBody.innerHTML = codes.map(code => {
+        const usedBy = code.used_by ? code.used_by.slice(0, 8) : '-';
+        return `
+            <tr>
+                <td><code>${code.code}</code></td>
+                <td>${code.is_used ? 'مستخدم' : 'متاح'}</td>
+                <td>${code.is_used ? usedBy : '-'}</td>
+                <td>${code.used_at ? formatDate(code.used_at) : '-'}</td>
+                <td>
+                    <button
+                        class="btn btn-sm btn-danger activation-code-delete"
+                        data-code-id="${code.id}"
+                        data-used="${code.is_used}"
+                        ${code.is_used ? 'disabled' : ''}
+                    >حذف</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    codesBody.querySelectorAll('.activation-code-delete').forEach(button => {
+        button.addEventListener('click', async () => {
+            await deleteActivationCode(button.dataset.codeId, button.dataset.used === 'true');
+        });
+    });
+}
+
+async function handleAddActivationCode() {
+    const subjectSelect = document.getElementById('activationSubjectSelect');
+    const codeInput = document.getElementById('newActivationCode');
+
+    const subjectId = subjectSelect?.value;
+    const code = codeInput?.value.trim();
+
+    if (!subjectId || !code) {
+        showActivationMessage('يرجى اختيار المادة وإدخال الكود.', 'danger');
+        return;
+    }
+
+    try {
+        const { error } = await supabaseClient
+            .from('subject_activation_codes')
+            .insert({ subject_id: subjectId, code });
+
+        if (error) throw error;
+
+        showActivationMessage('تم إضافة الكود بنجاح.', 'success');
+        codeInput.value = '';
+        await loadActivationCodes(subjectId);
+    } catch (error) {
+        console.error('Error adding activation code:', error);
+        showActivationMessage('تعذر إضافة الكود. تأكد أنه غير مستخدم.', 'danger');
+    }
+}
+
+async function handleGenerateActivationCodes() {
+    const subjectSelect = document.getElementById('activationSubjectSelect');
+    const countInput = document.getElementById('bulkActivationCount');
+
+    const subjectId = subjectSelect?.value;
+    const count = Math.max(1, parseInt(countInput?.value, 10) || 1);
+
+    if (!subjectId) {
+        showActivationMessage('يرجى اختيار المادة أولاً.', 'danger');
+        return;
+    }
+
+    const codesSet = new Set();
+    while (codesSet.size < count) {
+        codesSet.add(generateActivationCode());
+    }
+
+    const payload = Array.from(codesSet).map(code => ({
+        subject_id: subjectId,
+        code
+    }));
+
+    try {
+        const { error } = await supabaseClient
+            .from('subject_activation_codes')
+            .insert(payload);
+
+        if (error) throw error;
+
+        showActivationMessage('تم توليد الأكواد بنجاح.', 'success');
+        await loadActivationCodes(subjectId);
+    } catch (error) {
+        console.error('Error generating activation codes:', error);
+        showActivationMessage('تعذر توليد الأكواد. حاول مرة أخرى.', 'danger');
+    }
+}
+
+async function deleteActivationCode(codeId, isUsed) {
+    if (isUsed) {
+        showActivationMessage('لا يمكن حذف كود مستخدم.', 'danger');
+        return;
+    }
+
+    if (!confirm('هل أنت متأكد من حذف هذا الكود؟')) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('subject_activation_codes')
+            .delete()
+            .eq('id', codeId);
+
+        if (error) throw error;
+
+        const subjectSelect = document.getElementById('activationSubjectSelect');
+        if (subjectSelect?.value) {
+            await loadActivationCodes(subjectSelect.value);
+        }
+        showActivationMessage('تم حذف الكود.', 'success');
+    } catch (error) {
+        console.error('Error deleting activation code:', error);
+        showActivationMessage('تعذر حذف الكود.', 'danger');
+    }
+}
+
+function generateActivationCode() {
+    const randomPart = Math.random().toString(36).slice(2, 8).toUpperCase();
+    return `ALP-${randomPart}`;
+}
+
+function showActivationMessage(message, type = 'info') {
+    const messageEl = document.getElementById('activationMessage');
+    if (!messageEl) return;
+
+    const typeClass = type === 'success' ? 'text-success' : type === 'danger' ? 'text-danger' : 'text-info';
+    messageEl.textContent = message;
+    messageEl.className = `mt-2 text-center ${typeClass}`;
 }
 
 /**

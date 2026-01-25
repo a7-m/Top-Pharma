@@ -59,14 +59,16 @@
     <script src="js/supabase.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/subject-access.js"></script>
     <script src="js/videos.js"></script>
+    <script src="js/content-protection.js"></script>
     
     <script>
         // Protect page and load video
         (async () => {
             const isAuth = await requireAuth();
             if (!isAuth) return;
-            
+
             const videoId = getQueryParam('id');
             if (!videoId) {
                 showError('الفيديو غير موجود');
@@ -74,6 +76,21 @@
                     window.location.href = 'videos.html';
                 }, 2000);
                 return;
+            }
+
+            const user = await getCurrentUser();
+            const profile = user ? await getUserProfile(user.id) : null;
+            const watermarkText = profile?.full_name || user?.email || 'AL-Pharmacist';
+
+            enableContentProtection({
+                watermarkText,
+                targetId: 'playerWrapper'
+            });
+
+            const subjectParam = getQueryParam('subject');
+            if (subjectParam) {
+                const canAccess = await requireSubjectAccess(subjectParam, window.location.href);
+                if (!canAccess) return;
             }
             
             await loadVideo(videoId);
@@ -92,6 +109,11 @@
                     }, 2000);
                     return;
                 }
+
+                if (video.subject_id) {
+                    const canAccess = await requireSubjectAccess(video.subject_id, window.location.href);
+                    if (!canAccess) return;
+                }
                 
                 // Update video player
                 // Update video player
@@ -107,6 +129,7 @@
                 } else {
                     videoFrame.style.display = 'none';
                     videoFrame.src = '';
+                    applyVideoElementProtection(videoPlayer);
                     videoPlayer.src = videoUrl;
                     videoPlayer.style.display = 'block';
                 }

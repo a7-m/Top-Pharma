@@ -86,7 +86,7 @@ function renderVideoCards(videos, containerId, isAdmin = false) {
 
     container.innerHTML = videos.map(video => `
         <div class="video-card">
-            <div class="video-thumbnail" onclick="window.location.href='video-player.html?id=${video.id}'">
+            <div class="video-thumbnail" data-video-id="${video.id}" data-subject-id="${video.subject_id || ''}">
                 ${video.thumbnail_url 
                     ? `<img src="${video.thumbnail_url}" alt="${video.title}">`
                     : '<div class="thumbnail-placeholder"><i class="icon">🎥</i></div>'
@@ -109,6 +109,17 @@ function renderVideoCards(videos, containerId, isAdmin = false) {
             </div>
         </div>
     `).join('');
+
+    container.querySelectorAll('.video-thumbnail').forEach(thumbnail => {
+        thumbnail.addEventListener('click', async () => {
+            const videoId = thumbnail.dataset.videoId;
+            const subjectId = thumbnail.dataset.subjectId || null;
+            const nextUrl = `video-player.html?id=${videoId}${subjectId ? `&subject=${subjectId}` : ''}`;
+            const canAccess = await requireSubjectAccess(subjectId, nextUrl);
+            if (!canAccess) return;
+            window.location.href = nextUrl;
+        });
+    });
 }
 
 /**

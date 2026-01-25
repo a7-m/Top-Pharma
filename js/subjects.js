@@ -113,16 +113,34 @@ async function renderSubjectCards(containerId, linkTemplate = 'videos.html?subje
         // Define colors for each subject
         const colors = ['#2ecc71', '#3498db', '#9b59b6', '#e74c3c'];
 
-        container.innerHTML = subjects.map((subject, index) => `
-            <div class="subject-card" 
-                 onclick="window.location.href='${linkTemplate.replace('{id}', subject.id)}'"
-                 style="--subject-color: ${colors[index % colors.length]}">
-                <div class="subject-icon">${subject.icon}</div>
-                <h3>${subject.name_ar}</h3>
-                <p class="subject-name-en">${subject.name_en}</p>
-                <p class="subject-description">${subject.description || ''}</p>
-            </div>
-        `).join('');
+        container.innerHTML = subjects.map((subject, index) => {
+            const priceLabel = subject.price_egp === 0 ? 'مجاني' : `${subject.price_egp || 0} جنيه`;
+            return `
+                <div class="subject-card" 
+                     data-subject-id="${subject.id}"
+                     data-subject-link="${linkTemplate.replace('{id}', subject.id)}"
+                     style="--subject-color: ${colors[index % colors.length]}">
+                    <div class="subject-icon">${subject.icon}</div>
+                    <h3>${subject.name_ar}</h3>
+                    <p class="subject-name-en">${subject.name_en}</p>
+                    <p class="subject-description">${subject.description || ''}</p>
+                    <div class="subject-price">${priceLabel}</div>
+                </div>
+            `;
+        }).join('');
+
+        container.querySelectorAll('.subject-card').forEach(card => {
+            card.addEventListener('click', async () => {
+                const subjectId = card.dataset.subjectId;
+                const targetLink = card.dataset.subjectLink;
+                const status = await getSubjectAccessStatus(subjectId);
+                if (!status.hasAccess) {
+                    window.location.href = buildSubjectPaymentUrl(subjectId, targetLink);
+                    return;
+                }
+                window.location.href = targetLink;
+            });
+        });
 
         return subjects;
     } catch (error) {
@@ -166,7 +184,19 @@ async function renderSubjectFilterTabs(containerId, onFilterChange) {
 
         // Add event listeners
         container.querySelectorAll('.filter-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
+            tab.addEventListener('click', async () => {
+                const subjectId = tab.dataset.subjectId;
+                if (subjectId !== 'all') {
+                    const status = await getSubjectAccessStatus(subjectId);
+                    if (!status.hasAccess) {
+                        const nextUrl = new URL(window.location.href);
+                        nextUrl.searchParams.set('subject', subjectId);
+                        const nextPath = `${nextUrl.pathname}${nextUrl.search}`;
+                        window.location.href = buildSubjectPaymentUrl(subjectId, nextPath);
+                        return;
+                    }
+                }
+
                 // Update active state
                 container.querySelectorAll('.filter-tab').forEach(t => 
                     t.classList.remove('active')
@@ -174,7 +204,6 @@ async function renderSubjectFilterTabs(containerId, onFilterChange) {
                 tab.classList.add('active');
 
                 // Call callback
-                const subjectId = tab.dataset.subjectId;
                 if (onFilterChange) {
                     onFilterChange(subjectId === 'all' ? null : subjectId);
                 }

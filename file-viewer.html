@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض الملف - AL-Pharmacist</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="js/theme.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-container">
+            <a href="index.html" class="navbar-brand">
+                💊 <span>AL-Pharmacist</span>
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="dashboard.html" class="navbar-link">لوحة التحكم</a></li>
+                <li><a href="videos.html" class="navbar-link">الفيديوهات</a></li>
+                <li><a href="quizzes.html" class="navbar-link">الاختبارات</a></li>
+                <li><a href="files.html" class="navbar-link">الملفات</a></li>
+                <li><a href="#" onclick="signOut(); return false;" class="navbar-link btn btn-secondary">تسجيل الخروج</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="section">
+        <div class="container">
+            <a href="files.html" class="btn btn-outline mb-3">← العودة للملفات</a>
+
+            <div id="loading"></div>
+
+            <div id="fileViewerContainer" class="file-viewer-container">
+                <div id="fileContent" class="file-viewer-content"></div>
+            </div>
+
+            <div class="card" style="margin-top: 1.5rem;">
+                <h2 id="fileTitle">عنوان الملف</h2>
+                <div style="display: flex; gap: 1rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <span id="fileType" class="category-badge">النوع</span>
+                    <span id="fileDate" style="color: var(--gray);">التاريخ</span>
+                </div>
+                <p id="fileDescription" style="color: var(--gray); line-height: 1.8;">
+                    وصف الملف
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/subject-access.js"></script>
+    <script src="js/files.js"></script>
+    <script src="js/content-protection.js"></script>
+
+    <script>
+        (async () => {
+            const isAuth = await requireAuth();
+            if (!isAuth) return;
+
+            const fileId = getQueryParam('id');
+            if (!fileId) {
+                showError('الملف غير موجود');
+                setTimeout(() => {
+                    window.location.href = 'files.html';
+                }, 2000);
+                return;
+            }
+
+            const user = await getCurrentUser();
+            const profile = user ? await getUserProfile(user.id) : null;
+            const watermarkText = profile?.full_name || user?.email || 'AL-Pharmacist';
+            enableContentProtection({
+                watermarkText,
+                targetId: 'fileViewerContainer'
+            });
+
+            const subjectParam = getQueryParam('subject');
+            if (subjectParam) {
+                const canAccess = await requireSubjectAccess(subjectParam, window.location.href);
+                if (!canAccess) return;
+            }
+
+            await loadFile(fileId);
+        })();
+
+        async function loadFile(fileId) {
+            showLoading('loading');
+            try {
+                const file = await getFileById(fileId);
+                if (!file) {
+                    showError('الملف غير موجود');
+                    setTimeout(() => {
+                        window.location.href = 'files.html';
+                    }, 2000);
+                    return;
+                }
+
+                if (file.subject_id) {
+                    const canAccess = await requireSubjectAccess(file.subject_id, window.location.href);
+                    if (!canAccess) return;
+                }
+
+                let fileUrl = getFileDownloadUrl(file.file_url);
+                const fileContent = document.getElementById('fileContent');
+                const fileType = file.file_type || 'other';
+
+                if (fileUrl.includes('drive.google.com') && !fileUrl.includes('/preview')) {
+                    const match = fileUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    if (match) {
+                        fileUrl = `https://drive.google.com/file/d/${match[1]}/preview`;
+                    }
+                }
+
+                if (fileType === 'image') {
+                    fileContent.innerHTML = `<img src="${fileUrl}" alt="${file.title}" class="file-viewer-image">`;
+                } else if (fileType === 'pdf') {
+                    const viewerUrl = fileUrl.includes('#') ? fileUrl : `${fileUrl}#toolbar=0&navpanes=0&scrollbar=0`;
+                    fileContent.innerHTML = `<iframe class="file-viewer-frame" src="${viewerUrl}"></iframe>`;
+                } else {
+                    fileContent.innerHTML = `
+                        <div class="file-viewer-placeholder">
+                            <p>لا يمكن عرض هذا الملف مباشرة داخل المنصة.</p>
+                            <p>يرجى التواصل مع الإدارة للحصول على نسخة مخصصة.</p>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('fileTitle').textContent = file.title;
+                document.getElementById('fileDescription').textContent = file.description || 'لا يوجد وصف';
+                document.getElementById('fileType').textContent = fileType.toUpperCase();
+                document.getElementById('fileType').className = 'category-badge';
+                document.getElementById('fileDate').textContent = formatDate(file.created_at);
+            } catch (error) {
+                console.error('Error loading file:', error);
+                showError('حدث خطأ أثناء تحميل الملف');
+            } finally {
+                hideLoading('loading');
+            }
+        }
+    </script>
+</body>
+</html>

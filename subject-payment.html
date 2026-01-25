@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفعيل المادة - AL-Pharmacist</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="js/theme.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-container">
+            <a href="index.html" class="navbar-brand">
+                💊 <span>AL-Pharmacist</span>
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="dashboard.html" class="navbar-link">لوحة التحكم</a></li>
+                <li><a href="#" onclick="signOut(); return false;" class="navbar-link btn btn-secondary">تسجيل الخروج</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="section">
+        <div class="container">
+            <div class="auth-card" style="max-width: 750px; margin: 0 auto;">
+                <h2 class="text-center mb-3">تفعيل المادة الدراسية</h2>
+                <p class="text-center" style="color: var(--gray);" id="subjectIntro">يرجى إكمال خطوات الدفع لتفعيل المادة.</p>
+
+                <div class="payment-summary" id="subjectSummary">
+                    <div>
+                        <h3 id="subjectName">اسم المادة</h3>
+                        <p id="subjectDescription" style="color: var(--gray);">وصف المادة</p>
+                    </div>
+                    <div class="payment-price" id="subjectPrice">20 جنيه</div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h3 class="mb-2">تعليمات الدفع</h3>
+                    <ol class="payment-steps">
+                        <li>حوّل المبلغ المطلوب إلى الرقم التالي: <strong>01208162560</strong>.</li>
+                        <li>التقط سكرين شوت للإيصال.</li>
+                        <li>أرسل سكرين شوت مع تأكيد اسم المادة التي تريدها إلى الرقم <strong>01208162560</strong>.</li>
+                        <li>استلم كود التفعيل وضعه في الخانة أدناه.</li>
+                    </ol>
+                </div>
+
+                <form id="activationForm" class="mt-4">
+                    <div class="form-group">
+                        <label for="activationCode" class="form-label">كود التفعيل</label>
+                        <input type="text" id="activationCode" class="form-input" placeholder="أدخل كود التفعيل هنا" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">تفعيل المادة</button>
+                </form>
+
+                <div id="activationMessage" class="mt-3 text-center"></div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/subjects.js"></script>
+    <script src="js/subject-access.js"></script>
+
+    <script>
+        const activationForm = document.getElementById('activationForm');
+        const messageEl = document.getElementById('activationMessage');
+
+        (async () => {
+            const isAuth = await requireAuth();
+            if (!isAuth) return;
+
+            const subjectId = getQueryParam('subject');
+            if (!subjectId) {
+                showError('المادة غير محددة');
+                return;
+            }
+
+            try {
+                const subject = await getSubjectById(subjectId);
+                document.getElementById('subjectName').textContent = subject.name_ar;
+                document.getElementById('subjectDescription').textContent = subject.description || '';
+                document.getElementById('subjectPrice').textContent = `${subject.price_egp || 0} جنيه`;
+                document.getElementById('subjectIntro').textContent = `للوصول إلى مادة ${subject.name_ar} يرجى إكمال خطوات الدفع التالية:`;
+            } catch (error) {
+                console.error('Error loading subject:', error);
+                showError('تعذر تحميل بيانات المادة');
+            }
+        })();
+
+        activationForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            messageEl.textContent = 'جاري التفعيل...';
+            messageEl.className = 'mt-3 text-center text-info';
+
+            const subjectId = getQueryParam('subject');
+            const code = document.getElementById('activationCode').value;
+
+            const result = await activateSubjectAccess(subjectId, code);
+            if (result.success) {
+                messageEl.textContent = result.message;
+                messageEl.className = 'mt-3 text-center text-success';
+                const nextUrl = getQueryParam('next') || `videos.html?subject=${subjectId}`;
+                setTimeout(() => {
+                    window.location.href = nextUrl;
+                }, 1200);
+            } else {
+                messageEl.textContent = result.message;
+                messageEl.className = 'mt-3 text-center text-danger';
+            }
+        });
+    </script>
+</body>
+</html>

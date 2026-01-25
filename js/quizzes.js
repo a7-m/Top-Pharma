@@ -27,6 +27,62 @@ async function getAllQuizzes() {
 }
 
 /**
+ * Render quiz cards
+ */
+function renderQuizCards(quizzes, containerId, isAdmin = false) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (quizzes.length === 0) {
+        container.innerHTML = '<p class="no-data">لا توجد اختبارات متاحة حاليًا</p>';
+        return;
+    }
+
+    container.innerHTML = quizzes.map(quiz => {
+        const questionsCount = Array.isArray(quiz.questions) && quiz.questions.length > 0
+            ? quiz.questions[0].count
+            : 0;
+        return `
+            <div class="quiz-card">
+                <div class="quiz-header">
+                    <div>
+                        <h3>${quiz.title}</h3>
+                        <p style="color: var(--gray); margin-bottom: 0.5rem;">${quiz.description || ''}</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; color: var(--gray); font-size: var(--font-size-sm); margin-bottom: 1rem;">
+                    <span>عدد الأسئلة: ${questionsCount}</span>
+                    <span>درجة النجاح: ${quiz.passing_score || 50}%</span>
+                    <span>الوقت: ${quiz.time_limit ? `${quiz.time_limit} دقيقة` : 'بدون وقت'}</span>
+                </div>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary btn-sm quiz-start-btn"
+                            data-quiz-id="${quiz.id}"
+                            data-subject-id="${quiz.subject_id || ''}">
+                        بدء الاختبار
+                    </button>
+                    ${isAdmin ? `
+                    <button class="btn btn-sm btn-info" onclick="window.location.href='admin/create-quiz.html?id=${quiz.id}'">تعديل</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteQuiz('${quiz.id}')">حذف</button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.querySelectorAll('.quiz-start-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const quizId = button.dataset.quizId;
+            const subjectId = button.dataset.subjectId || null;
+            const nextUrl = `quiz-take.html?id=${quizId}${subjectId ? `&subject=${subjectId}` : ''}`;
+            const canAccess = await requireSubjectAccess(subjectId, nextUrl);
+            if (!canAccess) return;
+            window.location.href = nextUrl;
+        });
+    });
+}
+
+/**
  * Get quiz by ID with questions
  */
 async function getQuizById(quizId) {

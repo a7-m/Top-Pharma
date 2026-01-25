@@ -20,6 +20,25 @@ async function getAllFiles() {
 }
 
 /**
+ * Get file by ID
+ */
+async function getFileById(fileId) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('files')
+            .select('*')
+            .eq('id', fileId)
+            .single();
+
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error fetching file:', error);
+        return null;
+    }
+}
+
+/**
  * Get file download URL
  */
 function getFileDownloadUrl(filePath) {
@@ -82,6 +101,7 @@ function renderFileCards(files, containerId, isAdmin = false) {
 
     container.innerHTML = files.map(file => {
         const fileUrl = getFileDownloadUrl(file.file_url);
+        const buttonLabel = isAdmin ? 'تحميل' : 'عرض';
         return `
             <div class="file-card">
                 <div class="file-icon">
@@ -97,8 +117,13 @@ function renderFileCards(files, containerId, isAdmin = false) {
                     </div>
                 </div>
                 <div class="file-actions">
-                    <button class="btn btn-primary btn-sm" onclick="downloadFile('${fileUrl}', '${file.title}')">
-                        تحميل
+                    <button class="btn btn-primary btn-sm file-download-btn"
+                            data-file-id="${file.id}"
+                            data-file-url="${fileUrl}"
+                            data-file-name="${file.title}"
+                            data-file-type="${file.file_type}"
+                            data-subject-id="${file.subject_id || ''}">
+                        ${buttonLabel}
                     </button>
                     ${isAdmin ? `
                     <div style="margin-top: 10px; display: flex; gap: 5px; justify-content: center;">
@@ -110,6 +135,20 @@ function renderFileCards(files, containerId, isAdmin = false) {
             </div>
         `;
     }).join('');
+
+    container.querySelectorAll('.file-download-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const subjectId = button.dataset.subjectId || null;
+            if (!isAdmin) {
+                const nextUrl = `file-viewer.html?id=${button.dataset.fileId}${subjectId ? `&subject=${subjectId}` : ''}`;
+                const canAccess = await requireSubjectAccess(subjectId, nextUrl);
+                if (!canAccess) return;
+                window.location.href = nextUrl;
+                return;
+            }
+            downloadFile(button.dataset.fileUrl, button.dataset.fileName);
+        });
+    });
 }
 
 /**
