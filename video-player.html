@@ -29,6 +29,14 @@
     <section class="section">
         <div class="container">
             <a href="videos.html" class="btn btn-outline mb-3">← العودة للفيديوهات</a>
+
+            <div class="content-warning-banner" role="alert">
+                <div class="content-warning-title">تنبيه قانوني</div>
+                <p>
+                    هذا المحتوى محمي بحقوق النشر ومتاح للاستخدام الشخصي داخل منصة AL-Pharmacist فقط.
+                    يُمنع تسجيل الشاشة أو النسخ أو المشاركة أو إعادة النشر بأي وسيلة دون إذن مسبق.
+                </p>
+            </div>
             
             <div id="loading"></div>
             
@@ -53,6 +61,19 @@
             </div>
         </div>
     </section>
+
+    <div id="suspiciousOverlay" class="content-suspect-overlay" hidden>
+        <div class="content-suspect-card">
+            <h2>تم إيقاف عرض المحتوى </h2>
+            <p>
+                تم رصد سلوك متكرر يشير إلى محاولة تسجيل الشاشة أو مغادرة النافذة أثناء التشغيل.
+                حفاظًا على حقوق الملكية، تم إخفاء المحتوى تلقائيًا.
+            </p>
+            <p class="content-suspect-note">
+             يرجى الالتزام بسياسة الاستخدام
+            </p>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
@@ -80,12 +101,49 @@
 
             const user = await getCurrentUser();
             const profile = user ? await getUserProfile(user.id) : null;
-            const watermarkText = profile?.full_name || user?.email || 'AL-Pharmacist';
+            const watermarkText =  'AL-Pharmacist';
 
             enableContentProtection({
                 watermarkText,
                 targetId: 'playerWrapper'
             });
+
+            const suspiciousOverlay = document.getElementById('suspiciousOverlay');
+            const detectionThreshold = 3;
+
+            const handleSuspiciousBehavior = () => {
+                const videoPlayer = document.getElementById('videoPlayer');
+                const videoFrame = document.getElementById('videoFrame');
+
+                if (videoPlayer && !videoPlayer.paused) {
+                    videoPlayer.pause();
+                }
+
+                if (videoFrame && videoFrame.src) {
+                    videoFrame.src = '';
+                }
+
+                document.body.classList.add('content-suspect-state');
+                if (suspiciousOverlay) {
+                    suspiciousOverlay.removeAttribute('hidden');
+                }
+
+                if (typeof showToast === 'function') {
+                    showToast('تم إيقاف المحتوى بسبب تكرار محاولات مشتبه بها', 'error');
+                }
+            };
+
+            if (typeof enableScreenCaptureDetection === 'function') {
+                enableScreenCaptureDetection({
+                    threshold: detectionThreshold,
+                    onAttempt: ({ attempts, threshold }) => {
+                        if (typeof showToast === 'function') {
+                            showToast(`تم رصد محاولة مشتبه بها (${attempts}/${threshold})`, 'error');
+                        }
+                    },
+                    onThreshold: handleSuspiciousBehavior
+                });
+            }
 
             const subjectParam = getQueryParam('subject');
             if (subjectParam) {
