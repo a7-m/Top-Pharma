@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AL-Pharmacist - المنصة التعليمية للدكتور أحمد حسن</title>
+    <title>Top Pharma - المنصة التعليمية </title>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,7 +18,7 @@
     <nav class="navbar">
       <div class="container navbar-container">
         <a href="index.html" class="navbar-brand">
-          💊 <span>AL-Pharmacist</span>
+          💊 <span>Top Pharma</span>
         </a>
         <ul class="navbar-menu" id="navMenu">
           <li><a href="index.html" class="navbar-link">الرئيسية</a></li>
@@ -34,9 +34,9 @@
     <!-- Hero Section -->
     <section class="hero">
       <div class="container">
-        <h1 class="hero-title">منصة AL-Pharmacist التعليمية</h1>
+        <h1 class="hero-title">منصة Top Pharma التعليمية</h1>
         <p class="hero-subtitle">
-          تعلم المواد الدراسية لكلية صيدلة بطريقة احترافية مع د. أحمد حسن
+          تعلم المواد الدراسية لكلية صيدلة بطريقة إحترافية مبسطة 
         </p>
         <p class="hero-subtitle">
           📹 فيديوهات تعليمية • 📝 اختبارات تفاعلية • 📚 ملفات ومراجع
@@ -87,9 +87,8 @@
               line-height: 1.8;
             "
           >
-            منصة AL-Pharmacist هي منصة تعليمية متخصصة في المواد الدراسية لكلية صيدلة، يقدمها
-            الدكتور أحمد حسن بطريقة احترافية وسهلة. تهدف المنصة إلى توفير محتوى
-            تعليمي عالي الجودة لطلاب الصيدلة.
+            منصة Top Pharma هي منصة تعليمية متخصصة في المواد الدراسية لكلية صيدلة بطريقة احترافية وسهلة. تهدف المنصة إلى توفير محتوى
+            تعليمي عالي الجودة لطلاب كلية صيدلة.
           </p>
           <div class="mt-4">
             <a href="register.html" class="btn btn-primary btn-lg"
@@ -110,7 +109,7 @@
       "
     >
       <div class="container">
-        <p>&copy; 2026 AL-Pharmacist. جميع الحقوق محفوظة للدكتور أحمد حسن</p>
+        <p>&copy; 2026 Top Pharma. جميع الحقوق محفوظة</p>
       </div>
     </footer>
 
@@ -137,11 +136,12 @@
           let adminBtn = '';
           if (profile && profile.role === 'admin') {
              // Add button next to dashboard for admin
-             adminBtn = `<li><a href="admin/index.html" class="navbar-link btn btn-sm btn-outline" style="margin-right: 5px;">+ إضافة</a></li>`;
+             adminBtn = `<li><a href="admin/index.html" class="navbar-link btn btn-admin" style="margin-right: 5px;">المسؤول</a></li>`;
           }
 
           navMenu.innerHTML = `
             <li><a href="index.html" class="navbar-link">الرئيسية</a></li>
+            <li><a href="profile.html" class="navbar-link">الملف الشخصي</a></li>
             <li><a href="dashboard.html" class="navbar-link btn btn-secondary">لوحة التحكم</a></li>
             ${adminBtn}
           `;

@@ -3,7 +3,7 @@
 /**
  * Sign up a new user
  */
-async function signUp(email, password, fullName) {
+async function signUp(email, password, fullName, phone) {
     try {
         // Create user account
         const { data: authData, error: authError } = await supabaseClient.auth.signUp({
@@ -11,7 +11,8 @@ async function signUp(email, password, fullName) {
             password: password,
             options: {
                 data: {
-                    full_name: fullName
+                    full_name: fullName,
+                    phone: phone || null
                 }
             }
         });

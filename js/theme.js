@@ -1,10 +1,10 @@
 /**
- * AL-Pharmacist Theme Management System
+ * Top Pharma Theme Management System
  * Handles Light, Dark, and System theme preferences
  */
 
 (function () {
-  const THEME_KEY = "al_pharmacist_theme";
+  const THEME_KEY = "top_pharma_theme";
 
   // 1. Get initial theme
   function getInitialTheme() {

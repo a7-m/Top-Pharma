@@ -20,7 +20,7 @@ async function uploadToCloudinary(file, onProgress, resourceType = 'video') {
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     // Folder can be dynamic based on type if needed, keeping it simple for now
-    formData.append('folder', `al-pharmacist/${resourceType}s`); 
+    formData.append('folder', `Top Pharma/${resourceType}s`); 
 
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();

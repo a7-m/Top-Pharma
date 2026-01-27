@@ -5,7 +5,7 @@ const SUPABASE_ANON_KEY =
 
 // Cloudinary Configuration
 const CLOUDINARY_CLOUD_NAME = "de1tdzelf";
-const CLOUDINARY_UPLOAD_PRESET = "AL-Pharmacist";
+const CLOUDINARY_UPLOAD_PRESET = "Top Pharma";
 
 // Google Drive Configuration
 const GOOGLE_CLIENT_ID = "943132746773-rnui7re5b9qbafv73hh9p3c1ob9g88pd.apps.googleusercontent.com";

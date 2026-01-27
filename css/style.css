@@ -1,5 +1,5 @@
 /* ==========================================
-   AL-Pharmacist Platform - Main Stylesheet
+   Top Pharma Platform - Main Stylesheet
    Medical/Pharmacy Themed Design System
    ========================================== */
 
@@ -179,16 +179,33 @@ a:hover {
 }
 
 .navbar-brand {
-  font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--primary-color);
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
+  font-size: 0;
+}
+
+.navbar-brand::before {
+  content: "";
+  width: 38px;
+  height: 38px;
+  background: url("../assets/images/logo.png") center / contain no-repeat;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
 }
 
 .navbar-brand span {
   color: var(--secondary-color);
+  font-size: var(--font-size-xl);
+  line-height: 1;
+}
+
+.navbar-brand small {
+  font-size: var(--font-size-sm);
+  line-height: 1;
 }
 
 .navbar-menu {
@@ -299,6 +316,20 @@ a:hover {
 .btn-outline:hover {
   background: var(--primary-color);
   color: var(--white);
+}
+
+.btn-admin {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: var(--white);
+  padding: 0.7rem 1.7rem;
+  font-size: 0.95rem;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-admin:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
 }
 
 .btn-danger {
@@ -1397,6 +1428,152 @@ a:hover {
   .form-row {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+/* ===== Profile Page ===== */
+.profile-hero {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  color: var(--white);
+  padding: calc(var(--spacing-xl) - 0.5rem) 0;
+}
+
+.profile-hero-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.profile-hero-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  margin-bottom: var(--spacing-sm);
+}
+
+.profile-hero-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 520px;
+  margin: 0;
+}
+
+.profile-hero-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  min-width: 220px;
+  display: grid;
+  gap: var(--spacing-sm);
+  box-shadow: var(--shadow-md);
+}
+
+.profile-hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--white);
+}
+
+.profile-section {
+  padding-top: var(--spacing-lg);
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr);
+  gap: var(--spacing-lg);
+  align-items: start;
+}
+
+.profile-summary {
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-summary-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  box-shadow: var(--shadow-md);
+}
+
+.profile-meta-grid {
+  display: grid;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.profile-meta-item {
+  background: var(--light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  border: 1px dashed var(--gray-light);
+}
+
+.profile-info-note {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  background: rgba(44, 90, 160, 0.08);
+  border: 1px solid rgba(44, 90, 160, 0.15);
+}
+
+.profile-main {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.profile-form-card {
+  border: 1px solid var(--gray-light);
+}
+
+.profile-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.profile-message {
+  min-height: 1.4rem;
+}
+
+@media (max-width: 992px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-hero-card {
+    width: 100%;
   }
 }
 

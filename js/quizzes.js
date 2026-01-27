@@ -363,7 +363,7 @@ window.toggleDetails = function() {
  * Share result
  */
 window.shareResult = function(score) {
-    const text = `لقد حصلت على ${score}% في اختبار "${currentQuiz.title}" على منصة AL-Pharmacist!`;
+    const text = `لقد حصلت على ${score}% في اختبار "${currentQuiz.title}" على منصة Top Pharma!`;
     if (navigator.share) {
         navigator.share({
             title: 'نتيجتي في الاختبار',

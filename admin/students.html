@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>إدارة الطلاب - AL-Pharmacist</title>
+    <title>إدارة الطلاب - Top Pharma</title>
     <link rel="stylesheet" href="../css/style.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,7 +17,7 @@
     <nav class="navbar">
       <div class="container navbar-container">
         <a href="index.html" class="navbar-brand">
-          💊 <span>AL-Pharmacist Admin</span>
+          💊 <span>Top Pharma Admin</span>
         </a>
         <ul class="navbar-menu">
           <li><a href="index.html" class="navbar-link">لوحة التحكم</a></li>
@@ -49,7 +49,7 @@
                   type="text"
                   id="studentSearch"
                   class="form-input"
-                  placeholder="ابحث بالاسم أو البريد الإلكتروني"
+                  placeholder="ابحث بالاسم أو البريد الإلكتروني أو الهاتف"
                 />
                 <select id="subjectFilter" class="form-input">
                   <option value="">كل المواد</option>
@@ -61,6 +61,7 @@
                   <thead>
                     <tr>
                       <th>الطالب</th>
+                      <th>رقم الهاتف</th>
                       <th>الدور</th>
                       <th>المواد</th>
                       <th>تاريخ التسجيل</th>
@@ -69,7 +70,7 @@
                   </thead>
                   <tbody id="studentsTableBody">
                     <tr>
-                      <td colspan="5" class="text-center">جاري التحميل...</td>
+                      <td colspan="6" class="text-center">جاري التحميل...</td>
                     </tr>
                   </tbody>
                 </table>
@@ -100,6 +101,10 @@
                     <div class="student-meta-item">
                       <div class="text-muted">آخر دخول</div>
                       <div id="detailLastLogin">غير متاح</div>
+                    </div>
+                    <div class="student-meta-item">
+                      <div class="text-muted">رقم الهاتف</div>
+                      <div id="detailPhone">-</div>
                     </div>
                     <div class="student-meta-item">
                       <div class="text-muted">عدد المواد المفعلة</div>

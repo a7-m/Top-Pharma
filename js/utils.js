@@ -66,6 +66,21 @@ function formatDate(dateString) {
 }
 
 /**
+ * Format date + time to Arabic
+ */
+function formatDateTime(dateString) {
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleString('ar-EG', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+/**
  * Format duration in seconds to MM:SS
  */
 function formatDuration(seconds) {

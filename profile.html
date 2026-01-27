@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الملف الشخصي - Top Pharma</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="js/theme.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-container">
+            <a href="index.html" class="navbar-brand">
+                💊 <span>Top Pharma</span>
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="dashboard.html" class="navbar-link">لوحة التحكم</a></li>
+                <li><a href="profile.html" class="navbar-link">الملف الشخصي</a></li>
+                <li><a href="videos.html" class="navbar-link">الفيديوهات</a></li>
+                <li><a href="quizzes.html" class="navbar-link">الاختبارات</a></li>
+                <li><a href="files.html" class="navbar-link">الملفات</a></li>
+                <li><a href="#" onclick="signOut(); return false;" class="navbar-link btn btn-secondary">تسجيل الخروج</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="profile-hero">
+        <div class="container profile-hero-content">
+            <div>
+                <span class="profile-hero-tag">إدارة الحساب</span>
+                <h1>الملف الشخصي</h1>
+                <p class="profile-hero-subtitle">
+                    عدّل بياناتك الأساسية، البريد الإلكتروني، ورقم الهاتف وكلمة المرور بكل سهولة.
+                </p>
+            </div>
+            <div class="profile-hero-card">
+                <div class="profile-hero-stat">
+                    <span class="text-muted">حالة الحساب</span>
+                    <span class="status-pill neutral" id="summaryRoleBadge">طالب</span>
+                </div>
+                <div class="profile-hero-stat">
+                    <span class="text-muted">تاريخ التسجيل</span>
+                    <strong id="summaryCreatedShort">-</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section profile-section">
+        <div class="container">
+            <div class="profile-layout">
+                <aside class="profile-summary card">
+                    <div class="profile-summary-header">
+                        <div class="profile-avatar" id="summaryAvatar">TP</div>
+                        <div>
+                            <h3 id="summaryName">-</h3>
+                            <p class="text-muted" id="summaryEmail">-</p>
+                            <span class="status-pill neutral" id="summaryRole">طالب</span>
+                        </div>
+                    </div>
+
+                    <div class="profile-meta-grid">
+                        <div class="profile-meta-item">
+                            <div class="text-muted">رقم الهاتف</div>
+                            <div id="summaryPhone">-</div>
+                        </div>
+                        <div class="profile-meta-item">
+                            <div class="text-muted">تاريخ التسجيل</div>
+                            <div id="summaryCreated">-</div>
+                        </div>
+                        <div class="profile-meta-item">
+                            <div class="text-muted">آخر تحديث</div>
+                            <div id="summaryUpdated">-</div>
+                        </div>
+                    </div>
+
+                    <div class="profile-info-note">
+                        <p class="text-muted">
+                            تأكد من تحديث بياناتك باستمرار ليصلك كل جديد عن المحتوى والاشتراكات الخاصة بك.
+                        </p>
+                    </div>
+                </aside>
+
+                <div class="profile-main">
+                    <div class="card profile-form-card">
+                        <div class="profile-section-title">
+                            <div>
+                                <h3 class="mb-1">البيانات الأساسية</h3>
+                                <p class="text-muted">يمكنك تعديل جميع بياناتك الشخصية هنا.</p>
+                            </div>
+                        </div>
+
+                        <form id="profileForm" class="mt-3">
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">الاسم الكامل</label>
+                                    <input type="text" id="profileFullName" class="form-input" required autocomplete="name">
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">رقم الهاتف</label>
+                                    <input type="tel" id="profilePhone" class="form-input" required autocomplete="tel" placeholder="مثال: 01012345678">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">البريد الإلكتروني</label>
+                                <input type="email" id="profileEmail" class="form-input" required autocomplete="email">
+                                <small class="text-muted">قد يتطلب تحديث البريد الإلكتروني تأكيداً عبر البريد.</small>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">نوع الحساب</label>
+                                    <input type="text" id="profileRoleInput" class="form-input" disabled>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">تاريخ التسجيل</label>
+                                    <input type="text" id="profileCreatedInput" class="form-input" disabled>
+                                </div>
+                            </div>
+
+                            <div class="profile-actions">
+                                <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                                <button type="button" class="btn btn-outline" id="resetProfileBtn">إعادة التعيين</button>
+                            </div>
+                            <div id="profileMessage" class="profile-message mt-2 text-center"></div>
+                        </form>
+                    </div>
+
+                    <div class="card profile-form-card">
+                        <div class="profile-section-title">
+                            <div>
+                                <h3 class="mb-1">أمان الحساب</h3>
+                                <p class="text-muted">قم بتحديث كلمة المرور الخاصة بك بانتظام.</p>
+                            </div>
+                        </div>
+
+                        <form id="passwordForm" class="mt-3">
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">كلمة المرور الجديدة</label>
+                                    <input type="password" id="newPassword" class="form-input" placeholder="8 أحرف على الأقل">
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">تأكيد كلمة المرور</label>
+                                    <input type="password" id="confirmNewPassword" class="form-input" placeholder="أعد إدخال كلمة المرور">
+                                </div>
+                            </div>
+                            <div class="profile-actions">
+                                <button type="submit" class="btn btn-secondary">تحديث كلمة المرور</button>
+                            </div>
+                            <div id="passwordMessage" class="profile-message mt-2 text-center"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/profile.js"></script>
+</body>
+</html>

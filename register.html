@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إنشاء حساب - AL-Pharmacist</title>
+    <title>إنشاء حساب - Top Pharma</title>
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="js/theme.js"></script>
@@ -13,7 +13,7 @@
     <nav class="navbar">
         <div class="container navbar-container">
             <a href="index.html" class="navbar-brand">
-                💊 <span>AL-Pharmacist</span>
+                💊 <span>Top Pharma</span>
             </a>
             <ul class="navbar-menu">
                 <li><a href="index.html" class="navbar-link">الرئيسية</a></li>
@@ -29,7 +29,7 @@
                 <div class="card">
                     <h2 class="text-center mb-3">إنشاء حساب جديد</h2>
                     <p class="text-center mb-4" style="color: var(--gray);">
-                        انضم إلى منصة AL-Pharmacist وابدأ رحلتك التعليمية
+                        انضم إلى منصة Top Pharma وابدأ رحلتك التعليمية
                     </p>
                     
                     <form id="registerForm">
@@ -43,6 +43,12 @@
                             <label class="form-label">البريد الإلكتروني</label>
                             <input type="email" id="email" class="form-input" required 
                                    placeholder="example@email.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">رقم الهاتف</label>
+                            <input type="tel" id="phone" class="form-input" required
+                                   placeholder="مثال: 01012345678">
                         </div>
 
                         <div class="form-group">
@@ -101,6 +107,8 @@
             
             const fullName = document.getElementById('fullName').value.trim();
             const email = document.getElementById('email').value.trim();
+            const phoneInput = document.getElementById('phone').value.trim();
+            const normalizedPhone = phoneInput.replace(/[\s()-]/g, '');
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const errorDiv = document.getElementById('errorMessage');
@@ -121,6 +129,18 @@
                 errorDiv.style.display = 'block';
                 return;
             }
+
+            if (!normalizedPhone) {
+                errorDiv.textContent = 'رقم الهاتف مطلوب';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (!/^\+?\d{8,15}$/.test(normalizedPhone)) {
+                errorDiv.textContent = 'رقم الهاتف غير صحيح';
+                errorDiv.style.display = 'block';
+                return;
+            }
             
             if (password.length < 8) {
                 errorDiv.textContent = 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
@@ -138,7 +158,7 @@
             submitBtn.textContent = 'جاري إنشاء الحساب...';
             
             try {
-                const { data, error } = await signUp(email, password, fullName);
+                const { data, error } = await signUp(email, password, fullName, normalizedPhone);
                 
                 if (error) {
                     if (error.message.includes('already registered')) {

@@ -4,6 +4,7 @@ let studentsCache = [];
 let subjectsCache = [];
 let subjectAccessMap = new Map();
 let selectedStudentId = null;
+let lastSeenMap = new Map();
 
 document.addEventListener('DOMContentLoaded', () => {
     const tableBody = document.getElementById('studentsTableBody');
@@ -17,6 +18,7 @@ async function initializeStudentsPage() {
 
     await loadSubjects();
     await loadStudents();
+    await loadLastSeen();
     await loadSubjectAccess();
 
     renderSubjectFilters();
@@ -94,7 +96,7 @@ async function loadStudents() {
     try {
         const { data, error } = await supabaseClient
             .from('profiles')
-            .select('id, full_name, email, role, created_at')
+            .select('id, full_name, email, phone, role, created_at')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -104,6 +106,41 @@ async function loadStudents() {
         studentsCache = [];
         setTableMessage('تعذر تحميل بيانات الطلاب.');
         showError('حدث خطأ أثناء تحميل بيانات الطلاب');
+    }
+}
+
+async function loadLastSeen() {
+    lastSeenMap = new Map();
+
+    if (!studentsCache.length) return;
+
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) return;
+
+        const response = await fetch('/api/admin/last-seen', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ userIds: studentsCache.map(student => student.id) })
+        });
+
+        if (!response.ok) {
+            console.warn('Failed to load last seen data');
+            return;
+        }
+
+        const payload = await response.json();
+        const lastSeen = payload?.lastSeen || {};
+        Object.entries(lastSeen).forEach(([userId, value]) => {
+            if (value) {
+                lastSeenMap.set(userId, value);
+            }
+        });
+    } catch (error) {
+        console.warn('Error loading last seen data:', error);
     }
 }
 
@@ -167,7 +204,8 @@ function getFilteredStudents() {
     return studentsCache.filter(student => {
         const fullName = (student.full_name || '').toLowerCase();
         const email = (student.email || '').toLowerCase();
-        const matchesSearch = !searchTerm || fullName.includes(searchTerm) || email.includes(searchTerm);
+        const phone = (student.phone || '').toLowerCase();
+        const matchesSearch = !searchTerm || fullName.includes(searchTerm) || email.includes(searchTerm) || phone.includes(searchTerm);
 
         if (!matchesSearch) return false;
 
@@ -191,7 +229,8 @@ function renderStudentsTable(students = getFilteredStudents()) {
         const subjectPreview = renderSubjectPreview(accessList);
         const roleMeta = formatRole(student.role);
         const createdAt = student.created_at ? formatDate(student.created_at) : '-';
-        const lastLogin = 'غير متاح';
+        const lastSeen = lastSeenMap.get(student.id);
+        const lastLogin = lastSeen ? formatDateTime(lastSeen) : 'غير متاح';
         const rowClass = student.id === selectedStudentId ? 'is-selected' : '';
 
         return `
@@ -200,6 +239,7 @@ function renderStudentsTable(students = getFilteredStudents()) {
                     <div class="student-name">${student.full_name || 'بدون اسم'}</div>
                     <div class="text-muted" style="font-size: 0.85rem;">${student.email || '-'}</div>
                 </td>
+                <td>${student.phone || '-'}</td>
                 <td><span class="status-pill ${roleMeta.className}">${roleMeta.label}</span></td>
                 <td>${subjectPreview}</td>
                 <td>${createdAt}</td>
@@ -265,7 +305,12 @@ function renderStudentDetails() {
     document.getElementById('detailCreated').textContent = student.created_at ? formatDate(student.created_at) : '-';
     const lastLoginEl = document.getElementById('detailLastLogin');
     if (lastLoginEl) {
-        lastLoginEl.textContent = 'غير متاح';
+        const lastSeen = lastSeenMap.get(student.id);
+        lastLoginEl.textContent = lastSeen ? formatDateTime(lastSeen) : 'غير متاح';
+    }
+    const phoneEl = document.getElementById('detailPhone');
+    if (phoneEl) {
+        phoneEl.textContent = student.phone || '-';
     }
     document.getElementById('detailSubjectCount').textContent = accessList.length;
 
@@ -460,7 +505,7 @@ function setTableMessage(message) {
 
     tableBody.innerHTML = `
         <tr>
-            <td colspan="5" class="text-center">${message}</td>
+            <td colspan="6" class="text-center">${message}</td>
         </tr>
     `;
 }

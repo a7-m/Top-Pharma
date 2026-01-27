@@ -1,4 +1,4 @@
--- AL-Pharmacist Platform Database Schema
+-- Top Pharma Platform Database Schema
 -- Run this SQL in your Supabase SQL Editor
 
 -- ==========================================
@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
     full_name TEXT NOT NULL,
     email TEXT NOT NULL,
+    phone TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -173,7 +174,7 @@ SELECT USING (
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO public.profiles (id, full_name, email)
+    INSERT INTO public.profiles (id, full_name, email, phone)
     VALUES (
         NEW.id,
         COALESCE(
@@ -181,7 +182,8 @@ BEGIN
             NEW.raw_user_meta_data->>'name',
             ''
         ),
-        NEW.email
+        NEW.email,
+        NULLIF(NEW.raw_user_meta_data->>'phone', '')
     );
     RETURN NEW;
 END;
