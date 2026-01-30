@@ -96,11 +96,10 @@ async function renderSubjectSelector(selectElementId, selectedId = null, require
 }
 
 /**
- * Render subject cards for dashboard
+ * Render subject cards for dashboard with sections
  * @param {string} containerId - Container element ID
- * @param {string} linkTemplate - Link template (use {id} placeholder)
  */
-async function renderSubjectCards(containerId, linkTemplate = 'videos.html?subject={id}') {
+async function renderSubjectCards(containerId) {
     const container = document.getElementById(containerId);
     if (!container) {
         console.error(`Container with ID '${containerId}' not found`);
@@ -113,32 +112,60 @@ async function renderSubjectCards(containerId, linkTemplate = 'videos.html?subje
         // Define colors for each subject
         const colors = ['#2ecc71', '#3498db', '#9b59b6', '#e74c3c'];
 
-        container.innerHTML = subjects.map((subject, index) => {
-            const priceLabel = subject.price_egp === 0 ? 'مجاني' : `${subject.price_egp || 0} جنيه`;
-            return `
-                <div class="subject-card" 
-                     data-subject-id="${subject.id}"
-                     data-subject-link="${linkTemplate.replace('{id}', subject.id)}"
-                     style="--subject-color: ${colors[index % colors.length]}">
-                    <div class="subject-icon">${subject.icon}</div>
-                    <h3>${subject.name_ar}</h3>
-                    <p class="subject-name-en">${subject.name_en}</p>
-                    <p class="subject-description">${subject.description || ''}</p>
-                    <div class="subject-price">${priceLabel}</div>
+        let html = '';
+        for (let index = 0; index < subjects.length; index++) {
+            const subject = subjects[index];
+            const sections = await getSubjectSections(subject.id);
+            
+            html += `
+                <div class="subject-card-container" data-subject-id="${subject.id}">
+                    <div class="subject-card" 
+                         style="--subject-color: ${colors[index % colors.length]}">
+                        <div class="subject-icon">${subject.icon}</div>
+                        <h3>${subject.name_ar}</h3>
+                        <p class="subject-name-en">${subject.name_en}</p>
+                        <p class="subject-description">${subject.description || ''}</p>
+                        <button class="btn btn-outline view-sections-btn" data-subject-id="${subject.id}">
+                            عرض الأقسام (${sections.length})
+                        </button>
+                    </div>
                 </div>
             `;
-        }).join('');
+        }
 
+        container.innerHTML = html;
+
+        // Add view sections event listeners (for the button and the card itself)
         container.querySelectorAll('.subject-card').forEach(card => {
-            card.addEventListener('click', async () => {
-                const subjectId = card.dataset.subjectId;
-                const targetLink = card.dataset.subjectLink;
-                const status = await getSubjectAccessStatus(subjectId);
+            card.style.cursor = 'pointer';
+            card.addEventListener('click', () => {
+                const subjectId = card.parentElement.dataset.subjectId;
+                window.location.href = `sections.html?subject=${subjectId}`;
+            });
+        });
+
+        container.querySelectorAll('.view-sections-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const subjectId = btn.dataset.subjectId;
+                window.location.href = `sections.html?subject=${subjectId}`;
+            });
+        });
+
+        // Add section button event listeners
+        container.querySelectorAll('.section-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const sectionId = btn.dataset.sectionId;
+                const status = await getSectionAccessStatus(sectionId);
+                
                 if (!status.hasAccess) {
-                    window.location.href = buildSubjectPaymentUrl(subjectId, targetLink);
+                    window.location.href = buildSectionPaymentUrl(sectionId, `videos.html?section=${sectionId}`);
                     return;
                 }
-                window.location.href = targetLink;
+                
+                window.location.href = `videos.html?section=${sectionId}`;
             });
         });
 
@@ -237,4 +264,67 @@ function filterBySubject(items, subjectId) {
         return items;
     }
     return items.filter(item => item.subject_id === subjectId);
+}
+
+/**
+ * Create a new subject
+ * @param {Object} subjectData - Subject data object
+ * @returns {Promise<Object>} Created subject
+ */
+async function createSubject(subjectData) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('subjects')
+            .insert(subjectData)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error creating subject:', error);
+        throw error;
+    }
+}
+
+/**
+ * Update a subject
+ * @param {string} id - Subject UUID
+ * @param {Object} updates - Object with fields to update
+ * @returns {Promise<Object>} Updated subject
+ */
+async function updateSubject(id, updates) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('subjects')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error updating subject:', error);
+        throw error;
+    }
+}
+
+/**
+ * Delete a subject
+ * @param {string} id - Subject UUID
+ * @returns {Promise<void>}
+ */
+async function deleteSubject(id) {
+    try {
+        const { error } = await supabaseClient
+            .from('subjects')
+            .delete()
+            .eq('id', id);
+        
+        if (error) throw error;
+    } catch (error) {
+        console.error('Error deleting subject:', error);
+        throw error;
+    }
 }

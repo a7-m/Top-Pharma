@@ -115,3 +115,37 @@ function formatFileSize(bytes) {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
+
+/**
+ * Require admin access - wrapper for checkAdminAccess
+ * This function is used by inline scripts in admin pages
+ */
+async function requireAdmin() {
+    // Check if checkAdminAccess exists (from admin.js)
+    if (typeof checkAdminAccess === 'function') {
+        return await checkAdminAccess();
+    } else {
+        // Fallback: manual admin check if admin.js hasn't loaded yet
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        
+        if (!session) {
+            window.location.href = '../login.html';
+            return null;
+        }
+
+        const { data: profile, error } = await supabaseClient
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+
+        if (error || !profile || profile.role !== 'admin') {
+            alert('غير مسموح لك بالدخول إلى هذه الصفحة (Admins Only).');
+            window.location.href = '../index.html';
+            return null;
+        }
+
+        return session.user;
+    }
+}
+

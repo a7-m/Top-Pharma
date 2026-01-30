@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>أقسام المادة - Top Pharma</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="js/theme.js"></script>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="container navbar-container">
+        <a href="index.html" class="navbar-brand">
+          💊 <span>Top Pharma</span>
+        </a>
+        <ul class="navbar-menu">
+          <li><a href="dashboard.html" class="navbar-link">لوحة التحكم</a></li>
+          <li><a href="profile.html" class="navbar-link">الملف الشخصي</a></li>
+          <li><a href="videos.html" class="navbar-link">الفيديوهات</a></li>
+          <li><a href="quizzes.html" class="navbar-link">الاختبارات</a></li>
+          <li><a href="files.html" class="navbar-link">الملفات</a></li>
+          <li>
+            <a
+              href="#"
+              onclick="
+                signOut();
+                return false;
+              "
+              class="navbar-link btn btn-secondary"
+              >تسجيل الخروج</a
+            >
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Header -->
+    <section class="hero" style="padding: 3rem 0; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+      <div class="container">
+        <h1 class="hero-title" id="subjectHeader">أقسام المادة</h1>
+        <p class="hero-subtitle">استكمل مسيرتك التعليمية</p>
+        <a href="dashboard.html" class="btn btn-outline" style="color: white; border-color: white; margin-top: 1rem; display: inline-block;">
+            العودة للمواد ←
+        </a>
+      </div>
+    </section>
+
+    <!-- Sections Grid -->
+    <section class="section">
+      <div class="container">
+        <div id="sectionsGrid" class="card-grid">
+          <!-- Sections will be loaded here -->
+        </div>
+      </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/section-access.js"></script>
+    <script src="js/sections.js"></script>
+    <script src="js/subjects.js"></script>
+
+    <script>
+      (async () => {
+        const isAuth = await requireAuth();
+        if (!isAuth) return;
+
+        const subjectId = getSubjectFromURL();
+        if (!subjectId) {
+            window.location.href = 'dashboard.html';
+            return;
+        }
+
+        try {
+            // Load subject details
+            const subject = await getSubjectById(subjectId);
+            if (subject) {
+                document.getElementById('subjectHeader').textContent = `${subject.icon} ${subject.name_ar}`;
+                document.title = `${subject.name_ar} - أقسام المادة`;
+            }
+
+            // Render section cards
+            await renderSectionCards("sectionsGrid", subjectId);
+        } catch (error) {
+            console.error("Error loading sections page:", error);
+            showError("حدث خطأ أثناء تحميل أقسام المادة");
+        }
+      })();
+    </script>
+  </body>
+</html>

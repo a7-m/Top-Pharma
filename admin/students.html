@@ -31,7 +31,7 @@
         <div class="auth-card" style="max-width: 1200px; margin: 0 auto;">
           <h2 class="text-center mb-2">إدارة الطلاب</h2>
           <p class="text-center text-muted mb-4">
-            متابعة الحسابات، الاشتراكات، وتعديل صلاحيات الوصول للمواد.
+            متابعة الحسابات، الاشتراكات، وتعديل صلاحيات الوصول للأقسام.
           </p>
 
           <div class="student-admin-grid">
@@ -51,8 +51,8 @@
                   class="form-input"
                   placeholder="ابحث بالاسم أو البريد الإلكتروني أو الهاتف"
                 />
-                <select id="subjectFilter" class="form-input">
-                  <option value="">كل المواد</option>
+                <select id="sectionFilter" class="form-input">
+                  <option value="">كل الأقسام</option>
                 </select>
               </div>
 
@@ -63,7 +63,7 @@
                       <th>الطالب</th>
                       <th>رقم الهاتف</th>
                       <th>الدور</th>
-                      <th>المواد</th>
+                      <th>الأقسام</th>
                       <th>تاريخ التسجيل</th>
                       <th>آخر دخول</th>
                     </tr>
@@ -107,22 +107,22 @@
                       <div id="detailPhone">-</div>
                     </div>
                     <div class="student-meta-item">
-                      <div class="text-muted">عدد المواد المفعلة</div>
-                      <div id="detailSubjectCount">0</div>
+                      <div class="text-muted">عدد الأقسام المفعلة</div>
+                      <div id="detailSectionCount">0</div>
                     </div>
                   </div>
                 </div>
 
                 <div class="student-card mt-3">
-                  <h4 class="mb-2">المواد المفعلة</h4>
-                  <div id="detailSubjects" class="subject-chip-list"></div>
+                  <h4 class="mb-2">الأقسام المفعلة</h4>
+                  <div id="detailSections" class="subject-chip-list"></div>
 
                   <form id="grantAccessForm" class="mt-3">
                     <div class="form-row">
-                      <select id="grantSubjectSelect" class="form-input"></select>
-                      <button type="submit" class="btn btn-primary">تفعيل مادة</button>
+                      <select id="grantSectionSelect" class="form-input"></select>
+                      <button type="submit" class="btn btn-primary">تفعيل قسم</button>
                     </div>
-                    <small class="text-muted">سيتم إضافة المادة للطالب فوراً.</small>
+                    <small class="text-muted">سيتم إضافة القسم للطالب فوراً.</small>
                   </form>
                 </div>
 
@@ -162,6 +162,8 @@
     <script src="../js/supabase.js"></script>
     <script src="../js/utils.js"></script>
     <script src="../js/subjects.js"></script>
+    <script src="../js/sections.js"></script>
+    <script src="../js/google-drive.js"></script>
     <script src="../js/admin.js"></script>
     <script src="../js/students.js"></script>
   </body>

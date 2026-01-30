@@ -86,7 +86,7 @@ function renderVideoCards(videos, containerId, isAdmin = false) {
 
     container.innerHTML = videos.map(video => `
         <div class="video-card">
-            <div class="video-thumbnail" data-video-id="${video.id}" data-subject-id="${video.subject_id || ''}">
+            <div class="video-thumbnail" data-video-id="${video.id}" data-subject-id="${video.subject_id || ''}" data-section-id="${video.section_id || ''}">
                 ${video.thumbnail_url 
                     ? `<img src="${video.thumbnail_url}" alt="${video.title}">`
                     : '<div class="thumbnail-placeholder"><i class="icon">🎥</i></div>'
@@ -114,9 +114,20 @@ function renderVideoCards(videos, containerId, isAdmin = false) {
         thumbnail.addEventListener('click', async () => {
             const videoId = thumbnail.dataset.videoId;
             const subjectId = thumbnail.dataset.subjectId || null;
+            const sectionId = thumbnail.dataset.sectionId || null;
+            
             const nextUrl = `video-player.html?id=${videoId}${subjectId ? `&subject=${subjectId}` : ''}`;
-            const canAccess = await requireSubjectAccess(subjectId, nextUrl);
-            if (!canAccess) return;
+            
+            // Check section access if sectionId exists
+            if (sectionId) {
+                const canAccess = await requireSectionAccess(sectionId, nextUrl);
+                if (!canAccess) return;
+            } else if (subjectId) {
+                // Fallback to subject access if no section ID (legacy support)
+                const canAccess = await requireSubjectAccess(subjectId, nextUrl);
+                if (!canAccess) return;
+            }
+            
             window.location.href = nextUrl;
         });
     });

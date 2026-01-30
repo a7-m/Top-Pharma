@@ -80,9 +80,11 @@
 
             const user = await getCurrentUser();
             const profile = user ? await getUserProfile(user.id) : null;
-            const watermarkText = profile?.full_name || user?.email || 'Top Pharma';
+            const userName = profile?.full_name || user?.email || '';
+            const userPhone = profile?.phone || '';
             enableContentProtection({
-                watermarkText,
+                userName,
+                userPhone,
                 targetId: 'fileViewerContainer'
             });
 

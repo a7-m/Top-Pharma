@@ -1136,7 +1136,7 @@ a:hover {
 }
 
 .subject-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -1433,7 +1433,11 @@ a:hover {
 
 /* ===== Profile Page ===== */
 .profile-hero {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
   color: var(--white);
   padding: calc(var(--spacing-xl) - 0.5rem) 0;
 }
@@ -1509,7 +1513,11 @@ a:hover {
   width: 64px;
   height: 64px;
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   color: var(--white);
   display: flex;
   align-items: center;
@@ -1601,14 +1609,82 @@ a:hover {
 }
 
 .content-watermark {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  transform: rotate(-18deg);
-  color: var(--gray-dark);
+  position: absolute;
+  color: rgba(255, 255, 255, 0.25);
   font-weight: 700;
-  text-align: center;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.content-watermark-name {
+  animation: moveWatermarkName 20s infinite linear;
+}
+
+.content-watermark-phone {
+  animation: moveWatermarkPhone 25s infinite linear;
+  animation-delay: 10s;
+}
+
+@keyframes moveWatermarkName {
+  0% {
+    top: 10px;
+    left: 10px;
+  }
+  25% {
+    top: 10px;
+    right: 10px;
+    left: auto;
+  }
+  50% {
+    bottom: 10px;
+    right: 10px;
+    top: auto;
+    left: auto;
+  }
+  75% {
+    bottom: 10px;
+    left: 10px;
+    top: auto;
+    right: auto;
+  }
+  100% {
+    top: 10px;
+    left: 10px;
+    bottom: auto;
+    right: auto;
+  }
+}
+
+@keyframes moveWatermarkPhone {
+  0% {
+    bottom: 10px;
+    right: 10px;
+  }
+  25% {
+    bottom: 10px;
+    left: 10px;
+    right: auto;
+  }
+  50% {
+    top: 10px;
+    left: 10px;
+    bottom: auto;
+    right: auto;
+  }
+  75% {
+    top: 10px;
+    right: 10px;
+    bottom: auto;
+    left: auto;
+  }
+  100% {
+    bottom: 10px;
+    right: 10px;
+    top: auto;
+    left: auto;
+  }
 }
 
 .content-watermark span {
@@ -1774,5 +1850,174 @@ a:hover {
 
   .subject-filter-tabs .filter-tab {
     width: 100%;
+  }
+}
+
+/* ===== Subject & Section Styles ===== */
+.subjects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+}
+
+.subject-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.subject-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  transition: all var(--transition-normal);
+  border: 3px solid transparent;
+}
+
+.subject-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--subject-color, var(--primary-color));
+}
+
+.subject-icon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.subject-card h3 {
+  color: var(--dark);
+  margin-bottom: var(--spacing-xs);
+}
+
+.subject-name-en {
+  color: var(--gray);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.subject-description {
+  color: var(--gray);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  margin: var(--spacing-sm) 0;
+}
+
+.subject-price {
+  display: inline-block;
+  background: var(--subject-color, var(--primary-color));
+  color: var(--white);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  margin-top: var(--spacing-sm);
+}
+
+.toggle-sections-btn {
+  margin-top: var(--spacing-md);
+  width: 100%;
+}
+
+/* Sections Container */
+.sections-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--light);
+  border-radius: var(--radius-lg);
+  margin-top: var(--spacing-sm);
+}
+
+.section-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  border-left: 4px solid var(--section-color, var(--primary-color));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-card:hover {
+  transform: translateX(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.section-number {
+  position: absolute;
+  top: var(--spacing-sm);
+  left: var(--spacing-sm);
+  width: 30px;
+  height: 30px;
+  background: var(--section-color, var(--primary-color));
+  color: var(--white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+}
+
+.section-card h4 {
+  color: var(--dark);
+  margin: var(--spacing-md) 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-base);
+}
+
+.section-name-en {
+  color: var(--gray);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.section-description {
+  color: var(--gray);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  margin-bottom: var(--spacing-md);
+  flex-grow: 1;
+}
+
+.section-price {
+  display: inline-block;
+  background: var(--section-color, var(--primary-color));
+  color: var(--white);
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-sm);
+  align-self: flex-start;
+}
+
+.section-btn {
+  width: 100%;
+  margin-top: auto;
+}
+
+/* Responsive Sections */
+@media (max-width: 768px) {
+  .subjects-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sections-container {
+    grid-template-columns: 1fr;
+  }
+
+  .subject-card {
+    padding: var(--spacing-lg);
   }
 }

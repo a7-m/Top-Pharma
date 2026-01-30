@@ -46,6 +46,13 @@
                 <option value="">اختر المادة...</option>
               </select>
             </div>
+            
+            <div class="form-group">
+              <label for="section" class="form-label">القسم *</label>
+              <select id="section" class="form-input" required disabled>
+                <option value="">اختر المادة أولاً...</option>
+              </select>
+            </div>
 
             <div class="form-group">
                 <label class="form-label">مكان الرفع (Hosting)</label>
@@ -96,6 +103,7 @@
     <script src="../js/supabase.js"></script>
     <script src="../js/utils.js"></script>
     <script src="../js/subjects.js"></script>
+    <script src="../js/sections.js"></script>
     <script src="../js/cloudinary.js"></script>
     <script src="../js/google-drive.js"></script>
     <script src="../js/admin.js"></script>
@@ -104,6 +112,22 @@
       // Load subjects when page loads
       document.addEventListener('DOMContentLoaded', async () => {
         await renderSubjectSelector('subject', null, true);
+        
+        // Add event listener to subject selector to load sections
+        const subjectSelect = document.getElementById('subject');
+        const sectionSelect = document.getElementById('section');
+        
+        subjectSelect.addEventListener('change', async (e) => {
+          const subjectId = e.target.value;
+          sectionSelect.disabled = false;
+          
+          if (subjectId) {
+            await renderSectionSelector('section', subjectId, null, true);
+          } else {
+            sectionSelect.innerHTML = '<option value="">اختر المادة أولاً...</option>';
+            sectionSelect.disabled = true;
+          }
+        });
       });
     </script>
   </body>

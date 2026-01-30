@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الفيديوهات التعليمية - Top Pharma</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="js/theme.js"></script>
+    <script src="js/mobile-nav.js" defer></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -53,6 +55,14 @@
                 </div>
             </div>
 
+            <!-- Section Filter -->
+            <div id="sectionFilterContainer" class="subject-filter-container" style="display: none; margin-top: 1rem;">
+                <label class="subject-filter-label">اختر القسم:</label>
+                <div id="sectionFilterTabs" class="subject-filter-tabs">
+                    <!-- Section tabs will be loaded here -->
+                </div>
+            </div>
+
             <!-- Category Filter -->
             <div class="filter-tabs">
                 <button class="filter-tab active" data-category="all">الكل</button>
@@ -72,6 +82,8 @@
     <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/subject-access.js"></script>
+    <script src="js/section-access.js"></script>
+    <script src="js/sections.js"></script>
     <script src="js/subjects.js"></script>
     <script src="js/videos.js"></script>
     
@@ -79,6 +91,7 @@
         let allVideos = [];
         let currentCategory = 'all';
         let currentSubject = null;
+        let currentSection = null;
         let isAdmin = false;
 
         // Protect page and load videos
@@ -94,15 +107,13 @@
             }
 
             // Load subject filters
-            await renderSubjectFilterTabs('subjectFilterTabs', (subjectId) => {
-                currentSubject = subjectId;
-                filterAndDisplay();
+            await renderSubjectFilterTabs('subjectFilterTabs', async (subjectId) => {
+                await handleSubjectSelection(subjectId);
             });
 
             // Check URL for subject parameter
             const urlSubject = getSubjectFromURL();
             if (urlSubject) {
-                currentSubject = urlSubject;
                 // Highlight the active subject tab
                 document.querySelectorAll('[data-subject-id]').forEach(tab => {
                     if (tab.dataset.subjectId === urlSubject) {
@@ -110,10 +121,43 @@
                         tab.classList.add('active');
                     }
                 });
+                
+                // Load sections for the URL subject
+                await handleSubjectSelection(urlSubject);
+                
+                // Check URL for section parameter
+                const urlSection = getSectionFromURL();
+                if (urlSection) {
+                    currentSection = urlSection;
+                    // Highlight the active section tab
+                    const sectionTab = document.querySelector(`#sectionFilterTabs .filter-tab[data-section-id="${urlSection}"]`);
+                    if (sectionTab) {
+                        document.querySelectorAll('#sectionFilterTabs .filter-tab').forEach(t => t.classList.remove('active'));
+                        sectionTab.classList.add('active');
+                    }
+                }
             }
 
             await loadVideos();
         })();
+
+        async function handleSubjectSelection(subjectId) {
+            currentSubject = subjectId;
+            
+            // Load section filters for the selected subject
+            if (subjectId) {
+                document.getElementById('sectionFilterContainer').style.display = 'block';
+                await renderSectionFilterTabs('sectionFilterTabs', subjectId, (sectionId) => {
+                    currentSection = sectionId;
+                    filterAndDisplay();
+                });
+            } else {
+                document.getElementById('sectionFilterContainer').style.display = 'none';
+                currentSection = null;
+            }
+            
+            filterAndDisplay();
+        }
 
         async function loadVideos() {
             showLoading('loading');
@@ -131,6 +175,7 @@
 
         function filterAndDisplay() {
             let filteredVideos = filterBySubject(allVideos, currentSubject);
+            filteredVideos = filterBySection(filteredVideos, currentSection);
             filteredVideos = filterVideosByCategory(filteredVideos, currentCategory);
             renderVideoCards(filteredVideos, 'videosContainer', isAdmin);
         }

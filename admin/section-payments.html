@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>أسعار الأقسام وأكواد التفعيل - Top Pharma</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="../js/theme.js"></script>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="container navbar-container">
+        <a href="index.html" class="navbar-brand">
+          💊 <span>Top Pharma Admin</span>
+        </a>
+        <ul class="navbar-menu">
+          <li><a href="index.html" class="navbar-link">لوحة التحكم</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div class="container">
+        <div class="auth-card" style="max-width: 1100px; margin: 0 auto;">
+          <h2 class="text-center mb-3">أسعار الأقسام وأكواد التفعيل</h2>
+          <p class="text-center text-muted mb-4">
+            حدّث أسعار الأقسام وأنشئ أكواد تفعيل للطلاب.
+          </p>
+
+          <div class="payment-admin-grid">
+            <div class="payment-admin-panel">
+              <h3 class="mb-2">أسعار الأقسام</h3>
+              
+              <!-- Subject Selector -->
+              <div class="form-group">
+                <label for="subjectSelector" class="form-label">اختر المادة</label>
+                <select id="subjectSelector" class="form-input"></select>
+              </div>
+              
+              <div class="table-responsive">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>القسم</th>
+                      <th>السعر (EGP)</th>
+                      <th>حفظ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sectionPricesBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="payment-admin-panel">
+              <h3 class="mb-2">أكواد التفعيل</h3>
+              
+              <!-- Section Selector -->
+              <div class="form-group">
+                <label for="activationSectionSelect" class="form-label">القسم</label>
+                <select id="activationSectionSelect" class="form-input"></select>
+              </div>
+
+              <div class="form-row">
+                <input
+                  type="text"
+                  id="newActivationCode"
+                  class="form-input"
+                  placeholder="أدخل كود تفعيل يدوي"
+                />
+                <button class="btn btn-primary" id="addActivationCodeBtn">إضافة كود</button>
+              </div>
+
+              <div class="form-row mt-2">
+                <input
+                  type="number"
+                  id="bulkActivationCount"
+                  class="form-input"
+                  min="1"
+                  value="5"
+                />
+                <button class="btn btn-outline" id="generateActivationCodesBtn">توليد أكواد</button>
+              </div>
+
+              <div id="activationMessage" class="mt-2 text-center"></div>
+
+              <div class="table-responsive mt-3">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>الكود</th>
+                      <th>الحالة</th>
+                      <th>المستخدم</th>
+                      <th>تاريخ الاستخدام</th>
+                      <th>حذف</th>
+                    </tr>
+                  </thead>
+                  <tbody id="activationCodesBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/subjects.js"></script>
+    <script src="../js/sections.js"></script>
+    <script src="../js/google-drive.js"></script>
+    <script src="../js/admin.js"></script>
+    
+    <script>
+      // Section Payments Page Logic
+      document.addEventListener('DOMContentLoaded', async () => {
+        await requireAdmin();
+        await initSectionPaymentsPage();
+      });
+      
+      async function initSectionPaymentsPage() {
+        try {
+          const subjects = await getAllSubjects();
+          
+          // Populate subject selectors
+          const subjectSelector = document.getElementById('subjectSelector');
+          const activationSubjectSelector = document.getElementById('activationSectionSelect');
+          
+          if (subjects.length > 0) {
+            subjectSelector.innerHTML = subjects.map(s => 
+              `<option value="${s.id}">${s.icon || '📚'} ${s.name_ar}</option>`
+            ).join('');
+            
+            // Load sections for first subject
+            await loadSectionsForSubject(subjects[0].id);
+            
+            // Add event listener for subject change
+            subjectSelector.addEventListener('change', async (e) => {
+              await loadSectionsForSubject(e.target.value);
+            });
+          }
+        } catch (error) {
+          console.error('Error initializing section payments page:', error);
+          showError('خطأ في تحميل البيانات');
+        }
+      }
+      
+      async function loadSectionsForSubject(subjectId) {
+        try {
+          const sections = await getSubjectSections(subjectId);
+          
+          // Render section prices
+          renderSectionPrices(sections);
+          
+          // Populate activation section selector
+          const activationSectionSelect = document.getElementById('activationSectionSelect');
+          activationSectionSelect.innerHTML = sections.map(s =>
+            `<option value="${s.id}">${s.name_ar} - ${s.price_egp} جنيه</option>`
+          ).join('');
+          
+          // Load activation codes for first section
+          if (sections.length > 0) {
+            await loadActivationCodesForSection(sections[0].id);
+          }
+          
+          // Add event listener for section change
+          activationSectionSelect.addEventListener('change', async (e) => {
+            await loadActivationCodesForSection(e.target.value);
+          });
+          
+          // Add/Generate code buttons
+          document.getElementById('addActivationCodeBtn').onclick = handleAddSectionActivationCode;
+          document.getElementById('generateActivationCodesBtn').onclick = handleGenerateSectionActivationCodes;
+          
+        } catch (error) {
+          console.error('Error loading sections:', error);
+          showError('خطأ في تحميل الأقسام');
+        }
+      }
+      
+      function renderSectionPrices(sections) {
+        const tbody = document.getElementById('sectionPricesBody');
+        
+        if (!sections || sections.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="text-center">لا توجد أقسام لهذه المادة</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = sections.map(section => `
+          <tr>
+            <td>
+              <strong>${section.name_ar}</strong>
+              <div class="text-muted" style="font-size: 0.85rem;">${section.name_en}</div>
+            </td>
+            <td>
+              <input
+                type="number"
+                min="0"
+                class="form-input section-price-input"
+                data-section-id="${section.id}"
+                value="${section.price_egp || 0}"
+              />
+            </td>
+            <td>
+              <button class="btn btn-primary btn-sm section-price-save" data-section-id="${section.id}">حفظ</button>
+            </td>
+          </tr>
+        `).join('');
+        
+        // Add save button listeners
+        tbody.querySelectorAll('.section-price-save').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const sectionId = btn.dataset.sectionId;
+            const input = tbody.querySelector(`.section-price-input[data-section-id="${sectionId}"]`);
+            const price = Math.max(0, parseInt(input.value || 0));
+            await updateSectionPrice(sectionId, price);
+          });
+        });
+      }
+      
+      async function updateSectionPrice(sectionId, price) {
+        try {
+          const { error } = await supabaseClient
+            .from('subject_sections')
+            .update({ price_egp: price })
+            .eq('id', sectionId);
+          
+          if (error) throw error;
+          showSuccess('تم تحديث سعر القسم بنجاح');
+        } catch (error) {
+          console.error('Error updating section price:', error);
+          showError('خطأ في تحديث السعر');
+        }
+      }
+      
+      async function loadActivationCodesForSection(sectionId) {
+        const tbody = document.getElementById('activationCodesBody');
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">جاري تحميل الأكواد...</td></tr>';
+        
+        try {
+          const { data, error } = await supabaseClient
+            .from('section_activation_codes')
+            .select('id, code, is_used, used_at, used_by')
+            .eq('section_id', sectionId)
+            .order('created_at', { ascending: false });
+          
+          if (error) throw error;
+          
+          renderActivationCodes(data || []);
+        } catch (error) {
+          console.error('Error loading activation codes:', error);
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center">خطأ في تحميل الأكواد</td></tr>';
+        }
+      }
+      
+      function renderActivationCodes(codes) {
+        const tbody = document.getElementById('activationCodesBody');
+        
+        if (!codes || codes.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center">لا توجد أكواد</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = codes.map(code => {
+          const usedBy = code.used_by ? code.used_by.slice(0, 8) : '-';
+          return `
+            <tr>
+              <td><code>${code.code}</code></td>
+              <td>${code.is_used ? 'مستخدم' : 'متاح'}</td>
+              <td>${code.is_used ? usedBy : '-'}</td>
+              <td>${code.used_at ? formatDate(code.used_at) : '-'}</td>
+              <td>
+                <button
+                  class="btn btn-sm btn-danger activation-code-delete"
+                  data-code-id="${code.id}"
+                  data-used="${code.is_used}"
+                  ${code.is_used ? 'disabled' : ''}
+                >حذف</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        
+        // Add delete buttons
+        tbody.querySelectorAll('.activation-code-delete').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            await deleteSectionActivationCode(btn.dataset.codeId, btn.dataset.used === 'true');
+          });
+        });
+      }
+      
+      async function handleAddSectionActivationCode() {
+        const sectionSelect = document.getElementById('activationSectionSelect');
+        const codeInput = document.getElementById('newActivationCode');
+        
+        const sectionId = sectionSelect?.value;
+        const code = codeInput?.value.trim();
+        
+        if (!sectionId || !code) {
+          showActivationMessage('يرجى اختيار القسم وإدخال الكود', 'danger');
+          return;
+        }
+        
+        try {
+          const { error } = await supabaseClient
+            .from('section_activation_codes')
+            .insert({ section_id: sectionId, code });
+          
+          if (error) throw error;
+          
+          showActivationMessage('تم إضافة الكود بنجاح', 'success');
+          codeInput.value = '';
+          await loadActivationCodesForSection(sectionId);
+        } catch (error) {
+          console.error('Error adding activation code:', error);
+          showActivationMessage('تعذر إضافة الكود', 'danger');
+        }
+      }
+      
+      async function handleGenerateSectionActivationCodes() {
+        const sectionSelect = document.getElementById('activationSectionSelect');
+        const countInput = document.getElementById('bulkActivationCount');
+        
+        const sectionId = sectionSelect?.value;
+        const count = Math.max(1, parseInt(countInput?.value || 1));
+        
+        if (!sectionId) {
+          showActivationMessage('يرجى اختيار القسم أولاً', 'danger');
+          return;
+        }
+        
+        const codesSet = new Set();
+        while (codesSet.size < count) {
+          codesSet.add(generateActivationCode());
+        }
+        
+        const payload = Array.from(codesSet).map(code => ({
+          section_id: sectionId,
+          code
+        }));
+        
+        try {
+          const { error } = await supabaseClient
+            .from('section_activation_codes')
+            .insert(payload);
+          
+          if (error) throw error;
+          
+          showActivationMessage(`تم توليد ${count} كود بنجاح`, 'success');
+          await loadActivationCodesForSection(sectionId);
+        } catch (error) {
+          console.error('Error generating activation codes:', error);
+          showActivationMessage('تعذر توليد الأكواد', 'danger');
+        }
+      }
+      
+      async function deleteSectionActivationCode(codeId, isUsed) {
+        if (isUsed) {
+          showActivationMessage('لا يمكن حذف كود مستخدم', 'danger');
+          return;
+        }
+        
+        if (!confirm('هل أنت متأكد من حذف هذا الكود؟')) return;
+        
+        try {
+          const { error } = await supabaseClient
+            .from('section_activation_codes')
+            .delete()
+            .eq('id', codeId);
+          
+          if (error) throw error;
+          
+          const sectionSelect = document.getElementById('activationSectionSelect');
+          if (sectionSelect?.value) {
+            await loadActivationCodesForSection(sectionSelect.value);
+          }
+          showActivationMessage('تم حذف الكود', 'success');
+        } catch (error) {
+          console.error('Error deleting activation code:', error);
+          showActivationMessage('تعذر حذف الكود', 'danger');
+        }
+      }
+      
+      function generateActivationCode() {
+        const randomPart = Math.random().toString(36).slice(2, 8).toUpperCase();
+        return `SEC-${randomPart}`;
+      }
+      
+      function showActivationMessage(message, type = 'info') {
+        const messageEl = document.getElementById('activationMessage');
+        if (!messageEl) return;
+        
+        const typeClass = type === 'success' ? 'text-success' : type === 'danger' ? 'text-danger' : 'text-info';
+        messageEl.textContent = message;
+        messageEl.className = `mt-2 text-center ${typeClass}`;
+      }
+    </script>
+  </body>
+</html>

@@ -1,8 +1,8 @@
 // Student Management (Admin)
 
 let studentsCache = [];
-let subjectsCache = [];
-let subjectAccessMap = new Map();
+let sectionsCache = [];
+let sectionAccessMap = new Map();
 let selectedStudentId = null;
 let lastSeenMap = new Map();
 
@@ -16,12 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initializeStudentsPage() {
     setTableMessage('جاري التحميل...');
 
-    await loadSubjects();
+    await loadSections();
     await loadStudents();
     await loadLastSeen();
-    await loadSubjectAccess();
+    await loadSectionAccess();
 
-    renderSubjectFilters();
+    renderSectionFilters();
     renderStudentsTable();
     updateStudentStats();
     attachStudentEvents();
@@ -49,13 +49,13 @@ function attachStudentEvents() {
                 setInlineMessage('detailsMessage', 'يرجى اختيار طالب أولاً.', 'danger');
                 return;
             }
-            const select = document.getElementById('grantSubjectSelect');
-            const subjectId = select?.value;
-            if (!subjectId) {
-                setInlineMessage('detailsMessage', 'يرجى اختيار مادة للتفعيل.', 'danger');
+            const select = document.getElementById('grantSectionSelect');
+            const sectionId = select?.value;
+            if (!sectionId) {
+                setInlineMessage('detailsMessage', 'يرجى اختيار قسم للتفعيل.', 'danger');
                 return;
             }
-            await grantSubjectAccess(selectedStudentId, subjectId);
+            await grantSectionAccess(selectedStudentId, sectionId);
         });
     }
 
@@ -82,13 +82,13 @@ function attachStudentEvents() {
     }
 }
 
-async function loadSubjects() {
+async function loadSections() {
     try {
-        subjectsCache = await getAllSubjects();
+        sectionsCache = await getAllSections();
     } catch (error) {
-        console.error('Error loading subjects:', error);
-        subjectsCache = [];
-        showError('تعذر تحميل المواد الدراسية');
+        console.error('Error loading sections:', error);
+        sectionsCache = [];
+        showError('تعذر تحميل الأقسام');
     }
 }
 
@@ -118,7 +118,7 @@ async function loadLastSeen() {
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (!session?.access_token) return;
 
-        const response = await fetch('/api/admin/last-seen', {
+        const response = await fetch('http://localhost:3000/api/admin/last-seen', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -144,17 +144,17 @@ async function loadLastSeen() {
     }
 }
 
-async function loadSubjectAccess() {
+async function loadSectionAccess() {
     try {
         const { data, error } = await supabaseClient
-            .from('subject_access')
-            .select('id, user_id, subject_id, activated_at');
+            .from('section_access')
+            .select('id, user_id, section_id, activated_at');
 
         if (error) throw error;
-        subjectAccessMap = buildAccessMap(data || []);
+        sectionAccessMap = buildAccessMap(data || []);
     } catch (error) {
-        console.error('Error loading subject access:', error);
-        subjectAccessMap = new Map();
+        console.error('Error loading section access:', error);
+        sectionAccessMap = new Map();
     }
 }
 
@@ -169,29 +169,29 @@ function buildAccessMap(accessRows) {
     return map;
 }
 
-function renderSubjectFilters() {
-    const subjectFilter = document.getElementById('subjectFilter');
-    const grantSelect = document.getElementById('grantSubjectSelect');
+function renderSectionFilters() {
+    const sectionFilter = document.getElementById('sectionFilter');
+    const grantSelect = document.getElementById('grantSectionSelect');
 
-    if (subjectFilter) {
-        if (subjectsCache.length === 0) {
-            subjectFilter.innerHTML = '<option value="">لا توجد مواد</option>';
+    if (sectionFilter) {
+        if (sectionsCache.length === 0) {
+            sectionFilter.innerHTML = '<option value="">لا توجد أقسام</option>';
         } else {
-            subjectFilter.innerHTML = `
-                <option value="">كل المواد</option>
-                ${subjectsCache.map(subject => `
-                    <option value="${subject.id}">${subject.icon || '📚'} ${subject.name_ar}</option>
+            sectionFilter.innerHTML = `
+                <option value="">كل الأقسام</option>
+                ${sectionsCache.map(section => `
+                    <option value="${section.id}">${section.icon || '📖'} ${section.name_ar}</option>
                 `).join('')}
             `;
         }
     }
 
     if (grantSelect) {
-        if (subjectsCache.length === 0) {
-            grantSelect.innerHTML = '<option value="">لا توجد مواد</option>';
+        if (sectionsCache.length === 0) {
+            grantSelect.innerHTML = '<option value="">لا توجد أقسام</option>';
         } else {
-            grantSelect.innerHTML = subjectsCache.map(subject => `
-                <option value="${subject.id}">${subject.icon || '📚'} ${subject.name_ar}</option>
+            grantSelect.innerHTML = sectionsCache.map(section => `
+                <option value="${section.id}">${section.icon || '📖'} ${section.name_ar}</option>
             `).join('');
         }
     }
@@ -199,7 +199,7 @@ function renderSubjectFilters() {
 
 function getFilteredStudents() {
     const searchTerm = document.getElementById('studentSearch')?.value.trim().toLowerCase() || '';
-    const subjectFilter = document.getElementById('subjectFilter')?.value || '';
+    const sectionFilter = document.getElementById('sectionFilter')?.value || '';
 
     return studentsCache.filter(student => {
         const fullName = (student.full_name || '').toLowerCase();
@@ -209,9 +209,9 @@ function getFilteredStudents() {
 
         if (!matchesSearch) return false;
 
-        if (!subjectFilter) return true;
-        const accessList = subjectAccessMap.get(student.id) || [];
-        return accessList.some(access => access.subject_id === subjectFilter);
+        if (!sectionFilter) return true;
+        const accessList = sectionAccessMap.get(student.id) || [];
+        return accessList.some(access => access.section_id === sectionFilter);
     });
 }
 
@@ -225,8 +225,8 @@ function renderStudentsTable(students = getFilteredStudents()) {
     }
 
     tableBody.innerHTML = students.map(student => {
-        const accessList = subjectAccessMap.get(student.id) || [];
-        const subjectPreview = renderSubjectPreview(accessList);
+        const accessList = sectionAccessMap.get(student.id) || [];
+        const sectionPreview = renderSectionPreview(accessList);
         const roleMeta = formatRole(student.role);
         const createdAt = student.created_at ? formatDate(student.created_at) : '-';
         const lastSeen = lastSeenMap.get(student.id);
@@ -241,7 +241,7 @@ function renderStudentsTable(students = getFilteredStudents()) {
                 </td>
                 <td>${student.phone || '-'}</td>
                 <td><span class="status-pill ${roleMeta.className}">${roleMeta.label}</span></td>
-                <td>${subjectPreview}</td>
+                <td>${sectionPreview}</td>
                 <td>${createdAt}</td>
                 <td>${lastLogin}</td>
             </tr>
@@ -255,13 +255,13 @@ function renderStudentsTable(students = getFilteredStudents()) {
     });
 }
 
-function renderSubjectPreview(accessList) {
+function renderSectionPreview(accessList) {
     if (!accessList.length) {
-        return '<span class="text-muted">بدون مواد</span>';
+        return '<span class="text-muted">بدون أقسام</span>';
     }
 
     const preview = accessList.slice(0, 2).map(access => {
-        const label = getSubjectLabel(access.subject_id);
+        const label = getSectionLabel(access.section_id);
         return `<span class="subject-chip small">${label}</span>`;
     }).join('');
 
@@ -290,7 +290,7 @@ function renderStudentDetails() {
         return;
     }
 
-    const accessList = subjectAccessMap.get(student.id) || [];
+    const accessList = sectionAccessMap.get(student.id) || [];
     const roleMeta = formatRole(student.role);
 
     emptyState.hidden = true;
@@ -312,14 +312,14 @@ function renderStudentDetails() {
     if (phoneEl) {
         phoneEl.textContent = student.phone || '-';
     }
-    document.getElementById('detailSubjectCount').textContent = accessList.length;
+    document.getElementById('detailSectionCount').textContent = accessList.length;
 
     const roleSelect = document.getElementById('roleSelect');
     if (roleSelect) {
         roleSelect.value = student.role || 'student';
     }
 
-    renderStudentSubjects(accessList);
+    renderStudentSections(accessList);
     updateGrantSelect(accessList);
 
     setInlineMessage('detailsMessage', '');
@@ -327,50 +327,50 @@ function renderStudentDetails() {
     setInlineMessage('deleteMessage', '');
 }
 
-function renderStudentSubjects(accessList) {
-    const container = document.getElementById('detailSubjects');
+function renderStudentSections(accessList) {
+    const container = document.getElementById('detailSections');
     if (!container) return;
 
     if (!accessList.length) {
-        container.innerHTML = '<span class="text-muted">لا توجد مواد مفعلة حالياً.</span>';
+        container.innerHTML = '<span class="text-muted">لا توجد أقسام مفعلة حالياً.</span>';
         return;
     }
 
     container.innerHTML = accessList.map(access => {
-        const label = getSubjectLabel(access.subject_id);
+        const label = getSectionLabel(access.section_id);
         return `
-            <div class="subject-chip" data-subject-id="${access.subject_id}">
+            <div class="subject-chip" data-section-id="${access.section_id}">
                 <span>${label}</span>
-                <button type="button" class="subject-chip-remove" title="إزالة المادة">✕</button>
+                <button type="button" class="subject-chip-remove" title="إزالة القسم">✕</button>
             </div>
         `;
     }).join('');
 
     container.querySelectorAll('.subject-chip-remove').forEach(button => {
         button.addEventListener('click', async (event) => {
-            const subjectId = event.target.closest('.subject-chip')?.dataset.subjectId;
-            if (!subjectId || !selectedStudentId) return;
-            await revokeSubjectAccess(selectedStudentId, subjectId);
+            const sectionId = event.target.closest('.subject-chip')?.dataset.sectionId;
+            if (!sectionId || !selectedStudentId) return;
+            await revokeSectionAccess(selectedStudentId, sectionId);
         });
     });
 }
 
 function updateGrantSelect(accessList) {
-    const select = document.getElementById('grantSubjectSelect');
+    const select = document.getElementById('grantSectionSelect');
     if (!select) return;
 
-    const activeSet = new Set(accessList.map(access => access.subject_id));
+    const activeSet = new Set(accessList.map(access => access.section_id));
 
-    if (subjectsCache.length === 0) {
-        select.innerHTML = '<option value="">لا توجد مواد</option>';
+    if (sectionsCache.length === 0) {
+        select.innerHTML = '<option value="">لا توجد أقسام</option>';
         return;
     }
 
-    select.innerHTML = subjectsCache.map(subject => {
-        const isActive = activeSet.has(subject.id);
+    select.innerHTML = sectionsCache.map(section => {
+        const isActive = activeSet.has(section.id);
         return `
-            <option value="${subject.id}" ${isActive ? 'disabled' : ''}>
-                ${subject.icon || '📚'} ${subject.name_ar}${isActive ? ' (مفعلة)' : ''}
+            <option value="${section.id}" ${isActive ? 'disabled' : ''}>
+                ${section.icon || '📖'} ${section.name_ar}${isActive ? ' (مفعل)' : ''}
             </option>
         `;
     }).join('');
@@ -392,50 +392,50 @@ function updateStudentStats() {
 
     if (activeEl) {
         const activeCount = studentsCache.filter(student => {
-            const accessList = subjectAccessMap.get(student.id) || [];
+            const accessList = sectionAccessMap.get(student.id) || [];
             return accessList.length > 0;
         }).length;
         activeEl.textContent = `${activeCount} مشترك`;
     }
 }
 
-async function grantSubjectAccess(studentId, subjectId) {
+async function grantSectionAccess(studentId, sectionId) {
     setInlineMessage('detailsMessage', 'جاري التفعيل...', 'info');
 
     try {
         const { error } = await supabaseClient
-            .from('subject_access')
-            .insert({ user_id: studentId, subject_id: subjectId });
+            .from('section_access')
+            .insert({ user_id: studentId, section_id: sectionId });
 
         if (error) throw error;
 
-        setInlineMessage('detailsMessage', 'تم تفعيل المادة بنجاح.', 'success');
+        setInlineMessage('detailsMessage', 'تم تفعيل القسم بنجاح.', 'success');
         await refreshAccessData();
     } catch (error) {
         console.error('Error granting access:', error);
-        setInlineMessage('detailsMessage', 'تعذر تفعيل المادة. ربما مفعلة بالفعل.', 'danger');
+        setInlineMessage('detailsMessage', 'تعذر تفعيل القسم. ربما مفعل بالفعل.', 'danger');
     }
 }
 
-async function revokeSubjectAccess(studentId, subjectId) {
-    if (!confirm('هل تريد إزالة هذه المادة من الطالب؟')) return;
+async function revokeSectionAccess(studentId, sectionId) {
+    if (!confirm('هل تريد إزالة هذا القسم من الطالب؟')) return;
 
-    setInlineMessage('detailsMessage', 'جاري إزالة المادة...', 'info');
+    setInlineMessage('detailsMessage', 'جاري إزالة القسم...', 'info');
 
     try {
         const { error } = await supabaseClient
-            .from('subject_access')
+            .from('section_access')
             .delete()
             .eq('user_id', studentId)
-            .eq('subject_id', subjectId);
+            .eq('section_id', sectionId);
 
         if (error) throw error;
 
-        setInlineMessage('detailsMessage', 'تمت إزالة المادة بنجاح.', 'success');
+        setInlineMessage('detailsMessage', 'تمت إزالة القسم بنجاح.', 'success');
         await refreshAccessData();
     } catch (error) {
         console.error('Error revoking access:', error);
-        setInlineMessage('detailsMessage', 'تعذر إزالة المادة حالياً.', 'danger');
+        setInlineMessage('detailsMessage', 'تعذر إزالة القسم حالياً.', 'danger');
     }
 }
 
@@ -465,16 +465,16 @@ async function updateStudentRole(studentId, newRole) {
 }
 
 async function refreshAccessData() {
-    await loadSubjectAccess();
+    await loadSectionAccess();
     renderStudentsTable();
     renderStudentDetails();
     updateStudentStats();
 }
 
-function getSubjectLabel(subjectId) {
-    const subject = subjectsCache.find(item => item.id === subjectId);
-    if (!subject) return 'مادة';
-    return `${subject.icon || '📚'} ${subject.name_ar}`;
+function getSectionLabel(sectionId) {
+    const section = sectionsCache.find(item => item.id === sectionId);
+    if (!section) return 'قسم';
+    return `${section.icon || '📖'} ${section.name_ar}`;
 }
 
 function formatRole(role) {
@@ -521,7 +521,7 @@ async function deleteStudentAccount(studentId) {
             throw new Error('يرجى تسجيل الدخول مجدداً ثم المحاولة.');
         }
 
-        const response = await fetch('/api/admin/delete-user', {
+        const response = await fetch('http://localhost:3000/api/admin/delete-user', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -542,7 +542,7 @@ async function deleteStudentAccount(studentId) {
         }
 
         studentsCache = studentsCache.filter(student => student.id !== studentId);
-        subjectAccessMap.delete(studentId);
+        sectionAccessMap.delete(studentId);
         selectedStudentId = null;
 
         renderStudentsTable();

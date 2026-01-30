@@ -58,7 +58,8 @@ function renderQuizCards(quizzes, containerId, isAdmin = false) {
                 <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                     <button class="btn btn-primary btn-sm quiz-start-btn"
                             data-quiz-id="${quiz.id}"
-                            data-subject-id="${quiz.subject_id || ''}">
+                            data-subject-id="${quiz.subject_id || ''}"
+                            data-section-id="${quiz.section_id || ''}">
                         بدء الاختبار
                     </button>
                     ${isAdmin ? `
@@ -74,9 +75,18 @@ function renderQuizCards(quizzes, containerId, isAdmin = false) {
         button.addEventListener('click', async () => {
             const quizId = button.dataset.quizId;
             const subjectId = button.dataset.subjectId || null;
+            const sectionId = button.dataset.sectionId || null;
+            
             const nextUrl = `quiz-take.html?id=${quizId}${subjectId ? `&subject=${subjectId}` : ''}`;
-            const canAccess = await requireSubjectAccess(subjectId, nextUrl);
-            if (!canAccess) return;
+            
+            if (sectionId) {
+                const canAccess = await requireSectionAccess(sectionId, nextUrl);
+                if (!canAccess) return;
+            } else if (subjectId) {
+                const canAccess = await requireSubjectAccess(subjectId, nextUrl);
+                if (!canAccess) return;
+            }
+            
             window.location.href = nextUrl;
         });
     });

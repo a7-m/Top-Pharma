@@ -68,7 +68,7 @@ async function signInWithGoogle() {
         const { data, error } = await supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin + '/index.html'
+                redirectTo:'https://a7-m.github.io/Top-Pharma'
             }
         });
 

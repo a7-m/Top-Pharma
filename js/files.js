@@ -122,7 +122,8 @@ function renderFileCards(files, containerId, isAdmin = false) {
                             data-file-url="${fileUrl}"
                             data-file-name="${file.title}"
                             data-file-type="${file.file_type}"
-                            data-subject-id="${file.subject_id || ''}">
+                            data-subject-id="${file.subject_id || ''}"
+                            data-section-id="${file.section_id || ''}">
                         ${buttonLabel}
                     </button>
                     ${isAdmin ? `
@@ -139,10 +140,19 @@ function renderFileCards(files, containerId, isAdmin = false) {
     container.querySelectorAll('.file-download-btn').forEach(button => {
         button.addEventListener('click', async () => {
             const subjectId = button.dataset.subjectId || null;
+            const sectionId = button.dataset.sectionId || null;
+            
             if (!isAdmin) {
                 const nextUrl = `file-viewer.html?id=${button.dataset.fileId}${subjectId ? `&subject=${subjectId}` : ''}`;
-                const canAccess = await requireSubjectAccess(subjectId, nextUrl);
-                if (!canAccess) return;
+                
+                if (sectionId) {
+                    const canAccess = await requireSectionAccess(sectionId, nextUrl);
+                    if (!canAccess) return;
+                } else if (subjectId) {
+                    const canAccess = await requireSubjectAccess(subjectId, nextUrl);
+                    if (!canAccess) return;
+                }
+                
                 window.location.href = nextUrl;
                 return;
             }

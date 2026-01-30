@@ -643,8 +643,15 @@ async function handleAddVideo(e) {
     }
 
     const subjectId = document.getElementById('subject')?.value;
+    const sectionId = document.getElementById('section')?.value;
+    
     if (!subjectId) {
         alert('يرجى اختيار المادة الدراسية');
+        return;
+    }
+    
+    if (!sectionId) {
+        alert('يرجى اختيار القسم');
         return;
     }
 
@@ -654,6 +661,7 @@ async function handleAddVideo(e) {
             description,
             category,
             subject_id: subjectId,
+            section_id: sectionId,
             video_url: videoUrl,
             google_drive_id: driveId,
             cloudinary_id: cloudinaryId,
@@ -790,8 +798,15 @@ async function handleAddFile(e) {
     }
 
     const subjectId = document.getElementById('subject')?.value;
+    const sectionId = document.getElementById('section')?.value;
+    
     if (!subjectId) {
         alert('يرجى اختيار المادة الدراسية');
+        return;
+    }
+    
+    if (!sectionId) {
+        alert('يرجى اختيار القسم');
         return;
     }
 
@@ -801,6 +816,7 @@ async function handleAddFile(e) {
             description,
             file_type: fileType,
             subject_id: subjectId,
+            section_id: sectionId,
             file_url: fileUrl,
             google_drive_id: driveId,
             cloudinary_id: cloudinaryId
@@ -889,9 +905,15 @@ async function handleCreateQuiz(e) {
     const timeLimit = document.getElementById('timeLimit').value;
     const passingScore = document.getElementById('passingScore').value;
     const subjectId = document.getElementById('subject')?.value;
+    const sectionId = document.getElementById('section')?.value;
     
     if (!subjectId) {
         alert('يرجى اختيار المادة الدراسية');
+        return;
+    }
+    
+    if (!sectionId) {
+        alert('يرجى اختيار القسم');
         return;
     }
 
@@ -901,6 +923,7 @@ async function handleCreateQuiz(e) {
             title,
             description,
             subject_id: subjectId,
+            section_id: sectionId,
             time_limit: parseInt(timeLimit),
             passing_score: parseInt(passingScore)
         };

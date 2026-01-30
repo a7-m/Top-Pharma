@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>إدارة المواد والأقسام - Top Pharma</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="../js/theme.js"></script>
+    <style>
+      .management-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+      
+      @media (max-width: 968px) {
+        .management-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      
+      .management-panel {
+        background: var(--white);
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      }
+      
+      .management-panel h3 {
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary);
+      }
+      
+      .item-list {
+        max-height: 400px;
+        overflow-y: auto;
+        margin-bottom: 1rem;
+      }
+      
+      .item-card {
+        background: var(--light);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s;
+      }
+      
+      .item-card:hover {
+        background: var(--gray-light);
+        transform: translateX(-3px);
+      }
+      
+      .item-info {
+        flex: 1;
+      }
+      
+      .item-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+      
+      .item-subtitle {
+        font-size: 0.85rem;
+        color: var(--gray);
+      }
+      
+      .item-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+      
+      .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+      }
+      
+      .form-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      
+      .form-row > * {
+        flex: 1;
+      }
+      
+      .selected-subject {
+        background: var(--primary);
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="container navbar-container">
+        <a href="index.html" class="navbar-brand">
+          💊 <span>Top Pharma Admin</span>
+        </a>
+        <ul class="navbar-menu">
+          <li><a href="index.html" class="navbar-link">لوحة التحكم</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div class="container">
+        <div class="auth-card" style="max-width: 1200px; margin: 0 auto;">
+          <h2 class="text-center mb-3">إدارة المواد والأقسام</h2>
+          <p class="text-center text-muted mb-4">
+            إضافة وتعديل المواد الدراسية وأقسامها
+          </p>
+
+          <div class="management-grid">
+            <!-- Subjects Panel -->
+            <div class="management-panel">
+              <h3>المواد الدراسية</h3>
+              
+              <div class="item-list" id="subjectsList">
+                <!-- Subjects will be loaded here -->
+              </div>
+              
+              <button class="btn btn-primary btn-block" id="addSubjectBtn">+ إضافة مادة جديدة</button>
+              
+              <!-- Add/Edit Subject Form -->
+              <div id="subjectForm" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--gray-light);">
+                <h4 id="subjectFormTitle">إضافة مادة جديدة</h4>
+                <input type="hidden" id="editSubjectId" />
+                
+                <div class="form-group">
+                  <label for="subjectNameAr" class="form-label">الاسم بالعربية</label>
+                  <input type="text" id="subjectNameAr" class="form-input" required placeholder="مثال: علم العقاقير" />
+                </div>
+                
+                <div class="form-group">
+                  <label for="subjectNameEn" class="form-label">الاسم بالإنجليزية</label>
+                  <input type="text" id="subjectNameEn" class="form-input" required placeholder="Example: Pharmacognosy" />
+                </div>
+                
+                <div class="form-group">
+                  <label for="subjectDescription" class="form-label">الوصف</label>
+                  <textarea id="subjectDescription" class="form-input" rows="2"></textarea>
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="subjectIcon" class="form-label">الأيقونة (emoji)</label>
+                    <input type="text" id="subjectIcon" class="form-input" placeholder="💊" />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="subjectOrder" class="form-label">الترتيب</label>
+                    <input type="number" id="subjectOrder" class="form-input" min="1" value="1" />
+                  </div>
+                </div>
+                
+                <div style="display: flex; gap: 0.5rem;">
+                  <button type="button" class="btn btn-primary" id="saveSubjectBtn">حفظ</button>
+                  <button type="button" class="btn btn-outline" id="cancelSubjectBtn">إلغاء</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sections Panel -->
+            <div class="management-panel">
+              <h3>أقسام المادة</h3>
+              
+              <div id="noSubjectSelected" class="text-center text-muted" style="padding: 2rem;">
+                اختر مادة لعرض أقسامها
+              </div>
+              
+              <div id="sectionsManager" style="display: none;">
+                <div class="alert alert-info mb-3" style="padding: 0.75rem; background: #e3f2fd; border-radius: 6px;">
+                  المادة المختارة: <strong id="selectedSubjectName"></strong>
+                </div>
+                
+                <div class="item-list" id="sectionsList">
+                  <!-- Sections will be loaded here -->
+                </div>
+                
+                <button class="btn btn-primary btn-block" id="addSectionBtn">+ إضافة قسم جديد</button>
+                
+                <!-- Add/Edit Section Form -->
+                <div id="sectionForm" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--gray-light);">
+                  <h4 id="sectionFormTitle">إضافة قسم جديد</h4>
+                  <input type="hidden" id="editSectionId" />
+                  
+                  <div class="form-group">
+                    <label for="sectionNameAr" class="form-label">الاسم بالعربية</label>
+                    <input type="text" id="sectionNameAr" class="form-input" required placeholder="مثال: الشهر الأول" />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="sectionNameEn" class="form-label">الاسم بالإنجليزية</label>
+                    <input type="text" id="sectionNameEn" class="form-input" required placeholder="Example: Month 1" />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="sectionDescription" class="form-label">الوصف</label>
+                    <textarea id="sectionDescription" class="form-input" rows="2"></textarea>
+                  </div>
+                  
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="sectionOrder" class="form-label">الترتيب</label>
+                      <input type="number" id="sectionOrder" class="form-input" min="1" value="1" />
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="sectionPrice" class="form-label">السعر (جنيه)</label>
+                      <input type="number" id="sectionPrice" class="form-input" min="0" value="50" />
+                    </div>
+                  </div>
+                  
+                  <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" class="btn btn-primary" id="saveSectionBtn">حفظ</button>
+                    <button type="button" class="btn btn-outline" id="cancelSectionBtn">إلغاء</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/subjects.js"></script>
+    <script src="../js/sections.js"></script>
+    <script src="../js/google-drive.js"></script>
+    <script src="../js/admin.js"></script>
+    
+    <script>
+      let selectedSubjectId = null;
+      
+      // Load subjects on page load
+      document.addEventListener('DOMContentLoaded', async () => {
+        await requireAdmin();
+        await loadSubjects();
+      });
+      
+      // Add Subject Button
+      document.getElementById('addSubjectBtn').addEventListener('click', () => {
+        showSubjectForm();
+      });
+      
+      // Save Subject Button
+      document.getElementById('saveSubjectBtn').addEventListener('click', async () => {
+        await saveSubject();
+      });
+      
+      // Cancel Subject Button
+      document.getElementById('cancelSubjectBtn').addEventListener('click', () => {
+        hideSubjectForm();
+      });
+      
+      // Add Section Button
+      document.getElementById('addSectionBtn').addEventListener('click', () => {
+        showSectionForm();
+      });
+      
+      // Save Section Button
+      document.getElementById('saveSectionBtn').addEventListener('click', async () => {
+        await saveSection();
+      });
+      
+      // Cancel Section Button
+      document.getElementById('cancelSectionBtn').addEventListener('click', () => {
+        hideSectionForm();
+      });
+      
+      // Load and display subjects
+      async function loadSubjects() {
+        try {
+          const subjects = await getAllSubjects();
+          displaySubjects(subjects);
+        } catch (error) {
+          console.error('Error loading subjects:', error);
+          showError('خطأ في تحميل المواد');
+        }
+      }
+      
+      // Display subjects
+      function displaySubjects(subjects) {
+        const container = document.getElementById('subjectsList');
+        if (!subjects || subjects.length === 0) {
+          container.innerHTML = '<p class="text-muted text-center">لا توجد مواد</p>';
+          return;
+        }
+        
+        container.innerHTML = subjects.map(subject => `
+          <div class="item-card ${selectedSubjectId === subject.id ? 'selected-subject' : ''}" data-subject-id="${subject.id}">
+            <div class="item-info">
+              <div class="item-title">${subject.icon || '📚'} ${subject.name_ar}</div>
+              <div class="item-subtitle">${subject.name_en}</div>
+            </div>
+            <div class="item-actions">
+              <button class="btn btn-sm btn-outline edit-subject-btn" data-id="${subject.id}">✏️ تعديل</button>
+              <button class="btn btn-sm btn-outline select-subject-btn" data-id="${subject.id}">عرض الأقسام</button>
+            </div>
+          </div>
+        `).join('');
+        
+        // Add event listeners
+        container.querySelectorAll('.edit-subject-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const subject = subjects.find(s => s.id === id);
+            editSubject(subject);
+          });
+        });
+        
+        container.querySelectorAll('.select-subject-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            await selectSubject(id);
+          });
+        });
+      }
+      
+      // Show subject form
+      function showSubjectForm(subject = null) {
+        const form = document.getElementById('subjectForm');
+        const title = document.getElementById('subjectFormTitle');
+        
+        if (subject) {
+          title.textContent = 'تعديل المادة';
+          document.getElementById('editSubjectId').value = subject.id;
+          document.getElementById('subjectNameAr').value = subject.name_ar || '';
+          document.getElementById('subjectNameEn').value = subject.name_en || '';
+          document.getElementById('subjectDescription').value = subject.description || '';
+          document.getElementById('subjectIcon').value = subject.icon || '';
+          document.getElementById('subjectOrder').value = subject.order || 1;
+        } else {
+          title.textContent = 'إضافة مادة جديدة';
+          document.getElementById('editSubjectId').value = '';
+          document.getElementById('subjectNameAr').value = '';
+          document.getElementById('subjectNameEn').value = '';
+          document.getElementById('subjectDescription').value = '';
+          document.getElementById('subjectIcon').value = '';
+          document.getElementById('subjectOrder').value = 1;
+        }
+        
+        form.style.display = 'block';
+      }
+      
+      // Hide subject form
+      function hideSubjectForm() {
+        document.getElementById('subjectForm').style.display = 'none';
+      }
+      
+      // Edit subject
+      function editSubject(subject) {
+        showSubjectForm(subject);
+      }
+      
+      // Save subject
+      async function saveSubject() {
+        const id = document.getElementById('editSubjectId').value;
+        const nameAr = document.getElementById('subjectNameAr').value.trim();
+        const nameEn = document.getElementById('subjectNameEn').value.trim();
+        const description = document.getElementById('subjectDescription').value.trim();
+        const icon = document.getElementById('subjectIcon').value.trim();
+        const order = parseInt(document.getElementById('subjectOrder').value);
+        
+        if (!nameAr || !nameEn) {
+          showError('يرجى ملء الحقول المطلوبة');
+          return;
+        }
+        
+        const subjectData = {
+          name_ar: nameAr,
+          name_en: nameEn,
+          description: description || null,
+          icon: icon || '📚',
+          order: order || 1
+        };
+        
+        try {
+          if (id) {
+            await updateSubject(id, subjectData);
+            showSuccess('تم تحديث المادة بنجاح');
+          } else {
+            await createSubject(subjectData);
+            showSuccess('تم إضافة المادة بنجاح');
+          }
+          
+          hideSubjectForm();
+          await loadSubjects();
+        } catch (error) {
+          console.error('Error saving subject:', error);
+          showError('خطأ في حفظ المادة');
+        }
+      }
+      
+      // Select subject to view sections
+      async function selectSubject(subjectId) {
+        selectedSubjectId = subjectId;
+        
+        // Update UI
+        document.querySelectorAll('.item-card').forEach(card => {
+          card.classList.remove('selected-subject');
+        });
+        document.querySelector(`[data-subject-id="${subjectId}"]`)?.classList.add('selected-subject');
+        
+        // Show sections manager
+        document.getElementById('noSubjectSelected').style.display = 'none';
+        document.getElementById('sectionsManager').style.display = 'block';
+        
+        // Get subject name
+        const subjects = await getAllSubjects();
+        const subject = subjects.find(s => s.id === subjectId);
+        document.getElementById('selectedSubjectName').textContent = subject?.name_ar || '';
+        
+        // Load sections
+        await loadSections(subjectId);
+      }
+      
+      // Load sections for a subject
+      async function loadSections(subjectId) {
+        try {
+          const sections = await getSubjectSections(subjectId);
+          displaySections(sections);
+        } catch (error) {
+          console.error('Error loading sections:', error);
+          showError('خطأ في تحميل الأقسام');
+        }
+      }
+      
+      // Display sections
+      function displaySections(sections) {
+        const container = document.getElementById('sectionsList');
+        if (!sections || sections.length === 0) {
+          container.innerHTML = '<p class="text-muted text-center">لا توجد أقسام</p>';
+          return;
+        }
+        
+        container.innerHTML = sections.map(section => `
+          <div class="item-card">
+            <div class="item-info">
+              <div class="item-title">${section.name_ar}</div>
+              <div class="item-subtitle">${section.name_en} - ${section.price_egp} جنيه</div>
+            </div>
+            <div class="item-actions">
+              <button class="btn btn-sm btn-outline edit-section-btn" data-id="${section.id}">✏️ تعديل</button>
+              <button class="btn btn-sm btn-outline delete-section-btn" data-id="${section.id}">🗑️ حذف</button>
+            </div>
+          </div>
+        `).join('');
+        
+        // Add event listeners
+        container.querySelectorAll('.edit-section-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const section = sections.find(s => s.id === id);
+            editSection(section);
+          });
+        });
+        
+        container.querySelectorAll('.delete-section-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            if (confirm('هل أنت متأكد من حذف هذا القسم؟')) {
+              await deleteSection(id);
+            }
+          });
+        });
+      }
+      
+      // Show section form
+      function showSectionForm(section = null) {
+        const form = document.getElementById('sectionForm');
+        const title = document.getElementById('sectionFormTitle');
+        
+        if (section) {
+          title.textContent = 'تعديل القسم';
+          document.getElementById('editSectionId').value = section.id;
+          document.getElementById('sectionNameAr').value = section.name_ar || '';
+          document.getElementById('sectionNameEn').value = section.name_en || '';
+          document.getElementById('sectionDescription').value = section.description || '';
+          document.getElementById('sectionOrder').value = section.section_order || 1;
+          document.getElementById('sectionPrice').value = section.price_egp || 0;
+        } else {
+          title.textContent = 'إضافة قسم جديد';
+          document.getElementById('editSectionId').value = '';
+          document.getElementById('sectionNameAr').value = '';
+          document.getElementById('sectionNameEn').value = '';
+          document.getElementById('sectionDescription').value = '';
+          document.getElementById('sectionOrder').value = 1;
+          document.getElementById('sectionPrice').value = 50;
+        }
+        
+        form.style.display = 'block';
+      }
+      
+      // Hide section form
+      function hideSectionForm() {
+        document.getElementById('sectionForm').style.display = 'none';
+      }
+      
+      // Edit section
+      function editSection(section) {
+        showSectionForm(section);
+      }
+      
+      // Save section
+      async function saveSection() {
+        if (!selectedSubjectId) {
+          showError('يرجى اختيار مادة أولاً');
+          return;
+        }
+        
+        const id = document.getElementById('editSectionId').value;
+        const nameAr = document.getElementById('sectionNameAr').value.trim();
+        const nameEn = document.getElementById('sectionNameEn').value.trim();
+        const description = document.getElementById('sectionDescription').value.trim();
+        const order = parseInt(document.getElementById('sectionOrder').value);
+        const price = parseInt(document.getElementById('sectionPrice').value);
+        
+        if (!nameAr || !nameEn) {
+          showError('يرجى ملء الحقول المطلوبة');
+          return;
+        }
+        
+        const sectionData = {
+          subject_id: selectedSubjectId,
+          name_ar: nameAr,
+          name_en: nameEn,
+          description: description || null,
+          section_order: order || 1,
+          price_egp: price || 0
+        };
+        
+        try {
+          if (id) {
+            await updateSection(id, sectionData);
+            showSuccess('تم تحديث القسم بنجاح');
+          } else {
+            await createSection(sectionData);
+            showSuccess('تم إضافة القسم بنجاح');
+          }
+          
+          hideSectionForm();
+          await loadSections(selectedSubjectId);
+        } catch (error) {
+          console.error('Error saving section:', error);
+          showError('خطأ في حفظ القسم');
+        }
+      }
+      
+      // Delete section
+      async function deleteSection(sectionId) {
+        try {
+          const { error } = await supabaseClient
+            .from('subject_sections')
+            .delete()
+            .eq('id', sectionId);
+          
+          if (error) throw error;
+          
+          showSuccess('تم حذف القسم بنجاح');
+          await loadSections(selectedSubjectId);
+        } catch (error) {
+          console.error('Error deleting section:', error);
+          showError('خطأ في حذف القسم');
+        }
+      }
+    </script>
+  </body>
+</html>
