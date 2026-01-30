@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>لوحة التحكم - Top Pharma</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <link rel="icon" type="image/png" href="../assets/images/logo.png" />
     <link
       href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <script src="js/theme.js"></script>
+    <script src="js/mobile-nav.js" defer></script>
   </head>
   <body>
     <!-- Navigation -->
@@ -38,6 +41,8 @@
         </ul>
       </div>
     </nav>
+
+    <div id="announcementBanner" class="announcement-banner"></div>
 
     <!-- Dashboard Header -->
     <section class="hero" style="padding: 3rem 0">
@@ -151,12 +156,20 @@
     <script src="js/quizzes.js"></script>
     <script src="js/files.js"></script>
 
+    <script src="js/announcements.js"></script>
     <script>
       // Protect page and load user data
       (async () => {
         const isAuth = await requireAuth();
         if (!isAuth) return;
 
+        // Load user name
+        (async () => {
+            const user = await getCurrentUser();
+            if (user) {
+                document.getElementById('userNameDisplay').textContent = user.full_name || 'طالب';
+            }
+        })();
         const user = await getCurrentUser();
         if (user) {
           const profile = await getUserProfile(user.id);

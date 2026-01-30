@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الملف الشخصي - Top Pharma</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="js/theme.js"></script>
+    <script src="js/mobile-nav.js" defer></script>
 </head>
 <body>
     <nav class="navbar">
@@ -24,6 +26,8 @@
             </ul>
         </div>
     </nav>
+
+    <div id="announcementBanner" class="announcement-banner"></div>
 
     <section class="profile-hero">
         <div class="container profile-hero-content">
@@ -153,6 +157,19 @@
                             <div id="passwordMessage" class="profile-message mt-2 text-center"></div>
                         </form>
                     </div>
+
+                    <!-- Discount Codes Section -->
+                    <div class="card profile-form-card">
+                        <div class="profile-section-title">
+                            <div>
+                                <h3 class="mb-1">أكواد الخصم الخاصة بك</h3>
+                                <p class="text-muted">يمكنك استخدام هذه الأكواد للحصول على خصومات عند تفعيل أقسام جديدة.</p>
+                            </div>
+                        </div>
+                        <div id="userDiscountCodes" class="mt-3">
+                            <div class="text-center text-muted">جاري التحميل...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -164,5 +181,17 @@
     <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/profile.js"></script>
+    <script src="js/announcements.js"></script>
+    <script src="js/discount-codes.js"></script>
+    <script>
+        // Load user discount codes
+        (async () => {
+            const user = await getCurrentUser();
+            if (user) {
+                const discountCodes = await getUserDiscountCodes(user.id);
+                renderUserDiscountCodes('userDiscountCodes', discountCodes);
+            }
+        })();
+    </script>
 </body>
 </html>

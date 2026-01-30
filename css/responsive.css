@@ -48,7 +48,7 @@ body {
 .hamburger-menu span {
   width: 100%;
   height: 3px;
-  background: var(--white);
+  background: #f4e8d2;
   border-radius: 2px;
   transition: all 0.3s ease;
   position: relative;
@@ -94,7 +94,7 @@ body {
   overflow-y: auto;
 }
 
-.mobilemenu.active {
+.mobile-menu.active {
   right: 0;
 }
 
@@ -290,7 +290,7 @@ body {
 
 /* Desktop (>= 1200px) */
 @media (min-width: 1200px) {
-  hamburger-menu {
+  .hamburger-menu {
     display: none;
   }
 

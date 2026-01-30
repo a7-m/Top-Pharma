@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تفعيل القسم - Top Pharma</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="js/theme.js"></script>
+    <script src="js/mobile-nav.js" defer></script>
 </head>
 <body>
     <nav class="navbar">
@@ -22,12 +24,15 @@
         </div>
     </nav>
 
+    <div id="announcementBanner" class="announcement-banner"></div>
+
     <section class="section">
         <div class="container">
             <div class="auth-card" style="max-width: 750px; margin: 0 auto;">
                 <h2 class="text-center mb-3">تفعيل القسم</h2>
                 <p class="text-center" style="color: var(--gray);" id="sectionIntro">يرجى إكمال خطوات الدفع لتفعيل القسم.</p>
 
+                <!-- Current Section Summary -->
                 <div class="payment-summary" id="sectionSummary">
                     <div>
                         <h3 id="sectionName">اسم القسم</h3>
@@ -36,16 +41,64 @@
                     <div class="payment-price" id="sectionPrice">120 جنيه</div>
                 </div>
 
+                <!-- Multiple Section Selection Button -->
+                <div class="text-center" style="margin: 1.5rem 0;">
+                    <button type="button" class="btn btn-outline" id="addSectionBtn">
+                        ➕ إختيار قسم إضافي
+                    </button>
+                </div>
+
+                <!-- Selected Sections Container (hidden initially) -->
+                <div id="selectedSectionsContainer" class="selected-sections-container" style="display: none;">
+                    <h4 class="mb-2">الأقسام المختارة:</h4>
+                    <ul id="selectedSectionsList" class="selected-sections-list"></ul>
+                    <div class="total-price-display">
+                        <div class="total-price-label">المجموع الكلي:</div>
+                        <div class="total-price-amount" id="totalPriceDisplay">0 جنيه</div>
+                    </div>
+                </div>
+
+                <!-- Discount Code Section -->
+                <div class="discount-code-section">
+                    <h4 class="mb-2">لديك كود خصم؟</h4>
+                    <div class="discount-code-input-group">
+                        <input 
+                            type="text" 
+                            id="discountCodeInput" 
+                            class="discount-code-input" 
+                            placeholder="أدخل كود الخصم"
+                        >
+                        <button type="button" class="btn btn-secondary apply-discount-btn" id="applyDiscountBtn">
+                            تطبيق
+                        </button>
+                    </div>
+                    <div id="discountMessage" class="mt-2 text-center"></div>
+                </div>
+
+                <!-- Price Display with Discount -->
+                <div class="price-display">
+                    <div>
+                        <div id="originalPriceLabel">السعر الأصلي:</div>
+                        <div class="price-original" id="originalPriceDisplay">120 جنيه</div>
+                    </div>
+                    <div style="text-align: left;">
+                        <div id="finalPriceLabel">السعر النهائي:</div>
+                        <div class="price-discounted" id="finalPriceDisplay">120 جنيه</div>
+                    </div>
+                </div>
+
+                <!-- Payment Instructions -->
                 <div class="card" style="margin-top: 1.5rem;">
                     <h3 class="mb-2">تعليمات الدفع</h3>
                     <ol class="payment-steps">
-                        <li>حوّل المبلغ المطلوب إلى الرقم التالي: <strong>01031049266</strong>.</li>
+                        <li>حوّل المبلغ المطلوب إلى الرقمالتالي: <strong>01031049266</strong>.</li>
                         <li>التقط سكرين شوت للإيصال.</li>
                         <li>أرسل سكرين شوت مع تأكيد اسم القسم التي تريده إلى الرقم <strong>01207295870</strong>.</li>
                         <li>استلم كود التفعيل وضعه في الخانة أدناه.</li>
                     </ol>
                 </div>
 
+                <!-- Activation Form -->
                 <form id="activationForm" class="mt-4">
                     <div class="form-group">
                         <label for="activationCode" class="form-label">كود التفعيل</label>
@@ -59,6 +112,23 @@
         </div>
     </section>
 
+    <!-- Section Selection Modal (simplified - just a select dropdown) -->
+    <div id="sectionSelectionModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="card" style="width: 90%; max-width: 500px; margin: 2rem;">
+            <h3 class="mb-3">اختر قسمًا إضافيًا</h3>
+            <div class="form-group">
+                <label class="form-label">القسم:</label>
+                <select id="additionalSectionSelect" class="form-input">
+                    <option value="">اختر قسمًا...</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-outline" id="cancelSelectBtn">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="confirmSelectBtn">إضافة</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase.js"></script>
@@ -66,54 +136,8 @@
     <script src="js/auth.js"></script>
     <script src="js/sections.js"></script>
     <script src="js/section-access.js"></script>
-
-    <script>
-        const activationForm = document.getElementById('activationForm');
-        const messageEl = document.getElementById('activationMessage');
-
-        (async () => {
-            const isAuth = await requireAuth();
-            if (!isAuth) return;
-
-            const sectionId = getQueryParam('section');
-            if (!sectionId) {
-                showError('القسم غير محدد');
-                return;
-            }
-
-            try {
-                const section = await getSectionById(sectionId);
-                document.getElementById('sectionName').textContent = section.name_ar;
-                document.getElementById('sectionDescription').textContent = section.description || '';
-                document.getElementById('sectionPrice').textContent = `${section.price_egp || 0} جنيه`;
-                document.getElementById('sectionIntro').textContent = `للوصول إلى محتوى ${section.name_ar} يرجى إكمال خطوات الدفع التالية:`;
-            } catch (error) {
-                console.error('Error loading section:', error);
-                showError('تعذر تحميل بيانات القسم');
-            }
-        })();
-
-        activationForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            messageEl.textContent = 'جاري التفعيل...';
-            messageEl.className = 'mt-3 text-center text-info';
-
-            const sectionId = getQueryParam('section');
-            const code = document.getElementById('activationCode').value;
-
-            const result = await activateSectionAccess(sectionId, code);
-            if (result.success) {
-                messageEl.textContent = result.message;
-                messageEl.className = 'mt-3 text-center text-success';
-                const nextUrl = getQueryParam('next') || `videos.html?section=${sectionId}`;
-                setTimeout(() => {
-                    window.location.href = nextUrl;
-                }, 1200);
-            } else {
-                messageEl.textContent = result.message;
-                messageEl.className = 'mt-3 text-center text-danger';
-            }
-        });
-    </script>
+    <script src="js/discount-codes.js"></script>
+    <script src="js/announcements.js"></script>
+    <script src="js/section-payment-enhanced.js"></script>
 </body>
 </html>

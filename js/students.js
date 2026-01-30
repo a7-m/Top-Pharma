@@ -474,7 +474,16 @@ async function refreshAccessData() {
 function getSectionLabel(sectionId) {
     const section = sectionsCache.find(item => item.id === sectionId);
     if (!section) return 'قسم';
-    return `${section.icon || '📖'} ${section.name_ar}`;
+    
+    // Include subject name if available
+    const subjectName = section.subjects?.name_ar || '';
+    const sectionIcon = section.icon || section.subjects?.icon || '📖';
+    
+    if (subjectName) {
+        return `${sectionIcon} ${subjectName} - ${section.name_ar}`;
+    }
+    
+    return `${sectionIcon} ${section.name_ar}`;
 }
 
 function formatRole(role) {

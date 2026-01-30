@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الإعلانات - Top Pharma</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="../js/theme.js"></script>
+    <script src="../js/mobile-nav.js" defer></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-container">
+            <a href="../index.html" class="navbar-brand">
+                💊 <span>Top Pharma</span>
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="../dashboard.html" class="navbar-link">لوحة التحكم</a></li>
+                <li><a href="index.html" class="navbar-link">لوحة الإدارة</a></li>
+                <li><a href="announcements.html" class="navbar-link">الإعلانات</a></li>
+                <li><a href="discount-codes.html" class="navbar-link">أكواد الخصم</a></li>
+                <li><a href="#" onclick="signOut(); return false;" class="navbar-link btn btn-secondary">تسجيل الخروج</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="section">
+        <div class="container">
+            <div class="admin-header">
+                <h1>إدارة الإعلانات</h1>
+                <button class="btn btn-primary" id="addAnnouncementBtn">+ إضافة إعلان جديد</button>
+            </div>
+
+            <div class="card">
+                <div id="loadingMessage">جاري التحميل...</div>
+                <div id="announcementsTable" style="display: none;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>العنوان</th>
+                                <th>النوع</th>
+                                <th>الحالة</th>
+                                <th>تاريخ الإنشاء</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="announcementsTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="noData" style="display: none; text-align: center; padding: 3rem; color: var(--gray);">
+                    لا توجد إعلانات حالياً
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Add/Edit Modal -->
+    <div id="announcementModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">إضافة إعلان جديد</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="announcementForm">
+                <input type="hidden" id="announcementId">
+                
+                <div class="form-group">
+                    <label class="form-label">العنوان</label>
+                    <input type="text" id="titleInput" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">المحتوى</label>
+                    <textarea id="contentInput" class="form-input" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">النوع</label>
+                    <select id="typeInput" class="form-input" required>
+                        <option value="info">معلومة</option>
+                        <option value="warning">تحذير</option>
+                        <option value="success">نجاح</option>
+                        <option value="error">خطأ</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="isActiveInput" checked>
+                        نشط
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/admin-announcements.js"></script>
+</body>
+</html>

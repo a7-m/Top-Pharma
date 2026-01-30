@@ -2021,3 +2021,529 @@ a:hover {
     padding: var(--spacing-lg);
   }
 }
+/* ===== Announcements Banner ===== */
+.announcement-banner {
+  background: var(--primary-color);
+  padding: 0;
+  margin-bottom: var(--spacing-md);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.announcement-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.announcement-item:last-child {
+  border-bottom: none;
+}
+
+.announcement-item.announcement-info {
+  background: #3498db;
+  color: white;
+}
+
+.announcement-item.announcement-warning {
+  background: #f39c12;
+  color: white;
+}
+
+.announcement-item.announcement-success {
+  background: #27ae60;
+  color: white;
+}
+
+.announcement-item.announcement-error {
+  background: #e74c3c;
+  color: white;
+}
+
+.announcement-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  flex: 1;
+}
+
+.announcement-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.announcement-text {
+  flex: 1;
+}
+
+.announcement-title {
+  display: block;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.announcement-message {
+  font-size: var(--font-size-sm);
+  margin: 0;
+  opacity: 0.95;
+  line-height: 1.5;
+}
+
+.announcement-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.announcement-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* ===== Discount Codes ===== */
+.discount-code-section {
+  background: var(--light);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+  border: 2px dashed var(--primary-color);
+}
+
+.discount-code-input-group {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.discount-code-input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid var(--gray-light);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-md);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.discount-code-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.apply-discount-btn {
+  padding: 0.75rem 1.5rem;
+  white-space: nowrap;
+}
+
+.price-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-light);
+}
+
+.price-original {
+  font-size: var(--font-size-lg);
+  color: var(--gray);
+}
+
+.price-original.has-discount {
+  text-decoration: line-through;
+  opacity: 0.6;
+  font-size: var(--font-size-md);
+}
+
+.price-discounted {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--secondary-color);
+}
+
+.discount-badge {
+  background: var(--secondary-color);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+/* Discount Code Card (for profile display) */
+.discount-code-card {
+  background: white;
+  border: 2px solid var(--gray-light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  transition: all 0.3s ease;
+}
+
+.discount-code-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.discount-code-card.expired {
+  opacity: 0.6;
+  background: var(--light);
+}
+
+.discount-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.discount-code-badge {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  color: var(--primary-color);
+  letter-spacing: 2px;
+  background: var(--primary-light);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.discount-code-body {
+  margin: var(--spacing-md) 0;
+}
+
+.discount-code-info {
+  text-align: center;
+  padding: var(--spacing-md);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.discount-percentage {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
+}
+
+.discount-code-info .text-muted {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--font-size-sm);
+}
+
+.discount-code-details {
+  margin-top: var(--spacing-sm);
+}
+
+.discount-code-details p {
+  margin: 0.25rem 0;
+  font-size: var(--font-size-sm);
+}
+
+.copy-code-btn {
+  width: 100%;
+  margin-top: var(--spacing-sm);
+}
+
+/* Selected Sections List (for multiple section payment) */
+.selected-sections-container {
+  background: var(--light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+  border: 2px solid var(--gray-light);
+}
+
+.selected-sections-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.selected-section-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm);
+  background: white;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-sm);
+  border: 1px solid var(--gray-light);
+}
+
+.selected-section-item:last-child {
+  margin-bottom: 0;
+}
+
+.selected-section-info {
+  flex: 1;
+}
+
+.selected-section-name {
+  font-weight: 600;
+  color: var(--dark);
+  margin-bottom: 0.25rem;
+}
+
+.selected-section-price {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.remove-section-btn {
+  background: var(--danger);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: var(--font-size-sm);
+}
+
+.remove-section-btn:hover {
+  background: #c0392b;
+  transform: scale(1.05);
+}
+
+.total-price-display {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--primary-color);
+  color: white;
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.total-price-label {
+  font-size: var(--font-size-md);
+  margin-bottom: 0.5rem;
+}
+
+.total-price-amount {
+  font-size: var(--font-size-xxl);
+  font-weight: 700;
+}
+
+/* ===== Modal Styles ===== */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+.modal-content {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 90%;
+  max-width: 600px;
+  margin: 2rem auto;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--gray-light);
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--dark);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--gray);
+  cursor: pointer;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: var(--light);
+  color: var(--dark);
+}
+
+.modal-content form {
+  padding: 1.5rem;
+}
+
+/* ===== Admin Styles ===== */
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  padding: 1rem;
+  text-align: right;
+  border-bottom: 1px solid var(--gray-light);
+}
+
+.data-table th {
+  background: var(--light);
+  font-weight: 600;
+  color: var(--dark);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.data-table tr:hover {
+  background: var(--light);
+}
+
+.data-table td button {
+  margin-left: 0.5rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.badge-info {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.badge-warning {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.badge-success {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.badge-error {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+@media (max-width: 768px) {
+  .data-table {
+    font-size: var(--font-size-sm);
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 1rem auto;
+  }
+}
+/* Dark Mode Support for New Elements */
+body.dark-mode .payment-summary,
+body.dark-mode .discount-code-section,
+body.dark-mode .selected-sections-container,
+body.dark-mode .selected-section-item,
+body.dark-mode .price-display,
+body.dark-mode .discount-code-card,
+body.dark-mode .modal-content,
+body.dark-mode .data-table th {
+  background-color: var(--dark-card-bg);
+  border-color: var(--dark-border);
+  color: var(--dark-text);
+}
+
+body.dark-mode .selected-section-name,
+body.dark-mode .modal-header h3,
+body.dark-mode .data-table th {
+  color: var(--dark-text);
+}
+
+body.dark-mode .discount-code-input,
+body.dark-mode .modal-content input,
+body.dark-mode .modal-content select,
+body.dark-mode .modal-content textarea {
+  background-color: var(--dark-bg);
+  border-color: var(--dark-border);
+  color: var(--dark-text);
+}
+
+body.dark-mode .announcement-item {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Fix Hamburger Menu Color */
+.hamburger-menu span {
+  background-color: #f4e8d2 !important;
+}
+
+/* Ensure consistent text colors in dark mode */
+body.dark-mode .text-muted {
+  color: #a0a0a0 !important;
+}

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة أكواد الخصم - Top Pharma</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="../js/theme.js"></script>
+    <script src="../js/mobile-nav.js" defer></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-container">
+            <a href="../index.html" class="navbar-brand">
+                💊 <span>Top Pharma</span>
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="../dashboard.html" class="navbar-link">لوحة التحكم</a></li>
+                <li><a href="index.html" class="navbar-link">لوحة الإدارة</a></li>
+                <li><a href="announcements.html" class="navbar-link">الإعلانات</a></li>
+                <li><a href="discount-codes.html" class="navbar-link">أكواد الخصم</a></li>
+                <li><a href="#" onclick="signOut(); return false;" class="navbar-link btn btn-secondary">تسجيل الخروج</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="section">
+        <div class="container">
+            <div class="admin-header">
+                <h1>إدارة أكواد الخصم</h1>
+                <button class="btn btn-primary" id="addCodeBtn">+ إضافة كود خصم</button>
+            </div>
+
+            <div class="card">
+                <div id="loadingMessage">جاري التحميل...</div>
+                <div id="codesTable" style="display: none;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>الكود</th>
+                                <th>نسبة الخصم</th>
+                                <th>عدد الاستخدامات</th>
+                                <th>تاريخ الانتهاء</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="codesTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="noData" style="display: none; text-align: center; padding: 3rem; color: var(--gray);">
+                    لا توجد أكواد خصم حالياً
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Add/Edit Modal -->
+    <div id="codeModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">إضافة كود خصم جديد</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="codeForm">
+                <input type="hidden" id="codeId">
+                
+                <div class="form-group">
+                    <label class="form-label">الكود (أحرف كبيرة بدون مسافات)</label>
+                    <input type="text" id="codeInput" class="form-input" style="text-transform: uppercase;" required pattern="[A-Z0-9]+" title="أحرف كبيرة وأرقام فقط">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">نسبة الخصم (%)</label>
+                    <input type="number" id="discountInput" class="form-input" min="1" max="100" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">الحد الأقصى للاستخدامات (اتركه فارغاً لعدد غير محدود)</label>
+                    <input type="number" id="maxUsesInput" class="form-input" min="1">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">تاريخ الانتهاء (اختياري)</label>
+                    <input type="datetime-local" id="expiresInput" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="isActiveInput" checked>
+                        نشط
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/admin-discount-codes.js"></script>
+</body>
+</html>
