@@ -8,6 +8,7 @@ function enableContentProtection(options = {}) {
     blockContextMenu = true,
     blockKeys = true,
     blockSelection = true,
+    enableDevToolsDetection = true,
   } = options;
 
   if (blockSelection) {
@@ -15,8 +16,25 @@ function enableContentProtection(options = {}) {
   }
 
   if (blockContextMenu) {
+    // Enhanced right-click protection
     document.addEventListener("contextmenu", (event) => {
       event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }, true);
+
+    // Prevent drag and drop
+    document.addEventListener("dragstart", (event) => {
+      event.preventDefault();
+      return false;
+    });
+
+    // Prevent select all
+    document.addEventListener("selectstart", (event) => {
+      if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA') {
+        event.preventDefault();
+        return false;
+      }
     });
   }
 
@@ -26,27 +44,41 @@ function enableContentProtection(options = {}) {
       const ctrl = event.ctrlKey || event.metaKey;
       const shift = event.shiftKey;
 
+      // Block common shortcuts
       const blockedCombos =
         ctrl &&
-        (key === "s" ||
-          key === "p" ||
-          key === "u" ||
-          key === "c" ||
-          key === "x" ||
-          key === "i" ||
-          key === "j");
+        (key === "s" ||  // Save
+          key === "p" ||  // Print
+          key === "u" ||  // View Source
+          key === "c" ||  // Copy
+          key === "x" ||  // Cut
+          key === "a" ||  // Select All
+          key === "i" ||  // Inspect
+          key === "j");   // Console
+
+      // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+      const devToolsKeys = 
+        key === "f12" ||
+        (ctrl && shift && (key === "i" || key === "j" || key === "c"));
 
       const captureCombo =
-        (ctrl && shift && key === "s") ||
+        (ctrl && shift && key === "s") ||  // Screenshot
         (event.metaKey && shift && key === "s");
 
-      if (blockedCombos || captureCombo || key === "printscreen") {
+      if (blockedCombos || captureCombo || devToolsKeys || key === "printscreen") {
         event.preventDefault();
+        event.stopPropagation();
         if (typeof showToast === "function") {
           showToast("التنزيل أو النسخ غير مسموح لهذا المحتوى", "error");
         }
+        return false;
       }
-    });
+    }, true);
+  }
+
+  // DevTools Detection
+  if (enableDevToolsDetection) {
+    detectDevTools();
   }
 
   if (targetId && (userName || userPhone)) {
@@ -80,6 +112,70 @@ function enableContentProtection(options = {}) {
 
     target.appendChild(layer);
   }
+}
+
+/**
+ * DevTools Detection
+ * Attempts to detect if developer tools are open
+ */
+function detectDevTools() {
+  let devToolsOpen = false;
+  const threshold = 160; // Threshold for detecting devtools
+
+  // Method 1: Console monitoring
+  const consoleCheck = setInterval(() => {
+    const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+    const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+    
+    if (widthThreshold || heightThreshold) {
+      if (!devToolsOpen) {
+        devToolsOpen = true;
+        handleDevToolsDetected();
+      }
+    } else {
+      devToolsOpen = false;
+    }
+  }, 1000);
+
+  // Method 2: Debugger trap
+  setInterval(() => {
+    const start = performance.now();
+    // debugger; // Uncomment in production if you want aggressive detection
+    const end = performance.now();
+    if (end - start > 100) {
+      handleDevToolsDetected();
+    }
+  }, 1000);
+
+  // Method 3: toString override detection
+  const element = new Image();
+  Object.defineProperty(element, 'id', {
+    get: function() {
+      handleDevToolsDetected();
+      return 'devtools-detector';
+    }
+  });
+  // console.log(element); // Uncomment for aggressive detection
+}
+
+/**
+ * Handle DevTools Detection
+ */
+function handleDevToolsDetected() {
+  if (typeof showToast === 'function') {
+    showToast('⚠️ تم اكتشاف أدوات المطور. المحتوى محمي.', 'warning');
+  }
+  
+  // Optional: Blur sensitive content
+  const sensitiveElements = document.querySelectorAll('.content-protected');
+  sensitiveElements.forEach(el => {
+    el.style.filter = 'blur(10px)';
+  });
+
+  // Optional: Redirect or disable functionality
+  // setTimeout(() => {
+  //   window.location.href = '/';
+  // }, 2000);
 }
 
 function applyVideoElementProtection(videoElement) {
