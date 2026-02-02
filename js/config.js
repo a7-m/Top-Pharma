@@ -1,5 +1,5 @@
 // ===== BACKEND CONFIGURATION =====
-const BACKEND_URL = "backend-production-de98.up.railway.app";
+const BACKEND_URL = "https://backend-k38v.onrender.com";
 
 // ===== SUPABASE PUBLIC CONFIGURATION =====
 // These keys are safe for frontend use - they only allow authentication
