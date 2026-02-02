@@ -118,7 +118,7 @@ async function loadLastSeen() {
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (!session?.access_token) return;
 
-        const response = await fetch('http://localhost:3000/api/admin/last-seen', {
+        const response = await fetch('https://backend-k38v.onrender.com/api/admin/last-seen', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -536,7 +536,7 @@ async function deleteStudentAccount(studentId) {
             throw new Error('يرجى تسجيل الدخول مجدداً ثم المحاولة.');
         }
 
-        const response = await fetch('http://localhost:3000/api/admin/delete-user', {
+        const response = await fetch('https://backend-k38v.onrender.com/api/admin/delete-user', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
