@@ -48,7 +48,8 @@ app.use(helmet({
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
-      process.env.FRONTEND_URL,
+      process.env.FRONTEND_URL_1,
+      process.env.FRONTEND_URL_2,
       'http://127.0.0.1:5500',
       'http://localhost:5500'
     ];
@@ -419,6 +420,6 @@ app.use((err, req, res, next) => {
 // ===== START SERVER =====
 app.listen(PORT, () => {
   console.log(`🔒 Secure Server running on port ${PORT}`);
-  console.log(`📍 CORS allowed origin: ${process.env.FRONTEND_URL}`);
+  console.log(`📍 CORS allowed origins: ${process.env.FRONTEND_URL_1}, ${process.env.FRONTEND_URL_2}`);
   console.log(`⚡ Rate limit: ${process.env.RATE_LIMIT_MAX_REQUESTS} requests per ${parseInt(process.env.RATE_LIMIT_WINDOW_MS) / 60000} minutes`);
 });

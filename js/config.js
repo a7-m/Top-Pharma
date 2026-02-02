@@ -1,5 +1,5 @@
 // ===== BACKEND CONFIGURATION =====
-const BACKEND_URL = "http://localhost:3000";
+const BACKEND_URL = "backend-production-de98.up.railway.app";
 
 // ===== SUPABASE PUBLIC CONFIGURATION =====
 // These keys are safe for frontend use - they only allow authentication
