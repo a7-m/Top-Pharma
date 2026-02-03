@@ -449,12 +449,30 @@ async function updateStudentRole(studentId, newRole) {
     setInlineMessage('roleMessage', 'جاري حفظ الدور...', 'info');
 
     try {
-        const { error } = await supabaseClient
-            .from('profiles')
-            .update({ role: newRole })
-            .eq('id', studentId);
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) {
+            throw new Error('يرجى تسجيل الدخول مجدداً ثم المحاولة.');
+        }
 
-        if (error) throw error;
+        const response = await fetch(`${BACKEND_URL}/api/admin/update-role`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ userId: studentId, role: newRole })
+        });
+
+        if (!response.ok) {
+            let errorMessage = 'تعذر تحديث الدور.';
+            try {
+                const payload = await response.json();
+                if (payload?.error) errorMessage = payload.error;
+            } catch (parseError) {
+                console.warn('Failed to parse role update response', parseError);
+            }
+            throw new Error(errorMessage);
+        }
 
         const student = studentsCache.find(item => item.id === studentId);
         if (student) {
@@ -466,7 +484,8 @@ async function updateStudentRole(studentId, newRole) {
         renderStudentDetails();
     } catch (error) {
         console.error('Error updating role:', error);
-        setInlineMessage('roleMessage', 'تعذر تحديث الدور. تحقق من الصلاحيات.', 'danger');
+        const message = error?.message || 'تعذر تحديث الدور. تحقق من الصلاحيات.';
+        setInlineMessage('roleMessage', message, 'danger');
     }
 }
 
