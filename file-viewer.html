@@ -66,6 +66,7 @@
     <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/subject-access.js"></script>
+    <script src="js/section-access.js"></script>
     <script src="js/files.js"></script>
     <script src="js/content-protection.js"></script>
 
@@ -94,12 +95,6 @@
                 targetId: 'fileViewerContainer'
             });
 
-            const subjectParam = getQueryParam('subject');
-            if (subjectParam) {
-                const canAccess = await requireSubjectAccess(subjectParam, window.location.href);
-                if (!canAccess) return;
-            }
-
             await loadFile(fileId);
         })();
 
@@ -115,7 +110,10 @@
                     return;
                 }
 
-                if (file.subject_id) {
+                if (file.section_id) {
+                    const canAccess = await requireSectionAccess(file.section_id, window.location.href);
+                    if (!canAccess) return;
+                } else if (file.subject_id) {
                     const canAccess = await requireSubjectAccess(file.subject_id, window.location.href);
                     if (!canAccess) return;
                 }
@@ -133,14 +131,21 @@
 
                 if (fileType === 'image') {
                     fileContent.innerHTML = `<img src="${fileUrl}" alt="${file.title}" class="file-viewer-image">`;
-                } else if (fileType === 'pdf') {
-                    const viewerUrl = fileUrl.includes('#') ? fileUrl : `${fileUrl}#toolbar=0&navpanes=0&scrollbar=0`;
-                    fileContent.innerHTML = `<iframe class="file-viewer-frame" src="${viewerUrl}"></iframe>`;
+                } else if (['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'].includes(fileType)) {
+                    if (fileUrl.includes('drive.google.com')) {
+                        fileContent.innerHTML = `<iframe class="file-viewer-frame" src="${fileUrl}"></iframe>`;
+                    } else {
+                        const encodedUrl = encodeURIComponent(fileUrl);
+                        const viewerUrl = `https://docs.google.com/gview?url=${encodedUrl}&embedded=true`;
+                        fileContent.innerHTML = `<iframe class="file-viewer-frame" src="${viewerUrl}" frameborder="0"></iframe>`;
+                    }
+                } else if (fileType === 'video') {
+                     fileContent.innerHTML = `<video controls src="${fileUrl}" style="max-width:100%"></video>`;
                 } else {
                     fileContent.innerHTML = `
                         <div class="file-viewer-placeholder">
                             <p>لا يمكن عرض هذا الملف مباشرة داخل المنصة.</p>
-                            <p>يرجى التواصل مع الإدارة للحصول على نسخة مخصصة.</p>
+                            <p> <a href="${fileUrl}" target="_blank" class="btn btn-primary">تحميل الملف</a> </p>
                         </div>
                     `;
                 }

@@ -1,18 +1,6 @@
 // Subject Access Service
 
 /**
- * Build payment page URL for a subject
- */
-function buildSubjectPaymentUrl(subjectId, nextUrl = null) {
-    const params = new URLSearchParams();
-    params.set('subject', subjectId);
-    if (nextUrl) {
-        params.set('next', nextUrl);
-    }
-    return `subject-payment.html?${params.toString()}`;
-}
-
-/**
  * Check if the current user has access to a subject
  */
 async function getSubjectAccessStatus(subjectId) {
@@ -64,41 +52,45 @@ async function getSubjectAccessStatus(subjectId) {
 }
 
 /**
- * Require subject access, redirecting to payment page if needed
+ * Require subject access, simply redirecting to home if denied
  */
 async function requireSubjectAccess(subjectId, nextUrl = null) {
-    const status = await getSubjectAccessStatus(subjectId);
-    if (status.hasAccess) {
-        return true;
-    }
+  const status = await getSubjectAccessStatus(subjectId);
+  if (status.hasAccess) {
+    return true;
+  }
 
-    const redirectUrl = buildSubjectPaymentUrl(subjectId, nextUrl || window.location.href);
-    window.location.href = redirectUrl;
-    return false;
+  alert(
+    "عذراً، يجب تفعيل الاشتراك للوصول لهذا المحتوى. يرجى التواصل مع الإدارة.",
+  );
+  window.location.href = "index.html";
+  return false;
 }
 
 /**
  * Activate subject access with a code
  */
 async function activateSubjectAccess(subjectId, activationCode) {
-    const code = (activationCode || '').trim();
-    if (!code) {
-        return { success: false, message: 'يرجى إدخال كود التفعيل' };
-    }
+  const code = (activationCode || "").trim();
+  if (!code) {
+    return { success: false, message: "يرجى إدخال كود التفعيل" };
+  }
 
-    try {
-        const { data, error } = await supabaseClient
-            .rpc('activate_subject_access', { p_subject_id: subjectId, p_code: code });
+  try {
+    const { data, error } = await supabaseClient.rpc(
+      "activate_subject_access",
+      { p_subject_id: subjectId, p_code: code },
+    );
 
-        if (error) throw error;
+    if (error) throw error;
 
-        const result = Array.isArray(data) ? data[0] : data;
-        return {
-            success: Boolean(result && result.success),
-            message: result?.message || 'حدث خطأ أثناء التفعيل'
-        };
-    } catch (error) {
-        console.error('Error activating subject access:', error);
-        return { success: false, message: 'تعذر تفعيل الكود حالياً' };
-    }
+    const result = Array.isArray(data) ? data[0] : data;
+    return {
+      success: Boolean(result && result.success),
+      message: result?.message || "حدث خطأ أثناء التفعيل",
+    };
+  } catch (error) {
+    console.error("Error activating subject access:", error);
+    return { success: false, message: "تعذر تفعيل الكود حالياً" };
+  }
 }

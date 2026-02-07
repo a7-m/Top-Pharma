@@ -168,17 +168,32 @@ async function deleteFile(fileId) {
     if (!confirm('هل أنت متأكد من حذف هذا الملف؟')) return;
     
     try {
-        const { error } = await supabaseClient
-            .from('files')
-            .delete()
-            .eq('id', fileId);
-            
-        if (error) throw error;
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+            alert('يجب تسجيل الدخول أولاً');
+            return;
+        }
+
+        // Call backend API to delete from Cloudinary and Supabase
+        const response = await fetch(`${BACKEND_URL}/api/admin/delete-file`, {
+            method: 'POST', // Using POST as defined in backend
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ fileId })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'فشل حذف الملف');
+        }
         
         alert('تم حذف الملف بنجاح');
         window.location.reload();
     } catch (error) {
         console.error('Error deleting file:', error);
-        alert('حدث خطأ أثناء الحذف');
+        alert('حدث خطأ أثناء الحذف: ' + error.message);
     }
 }

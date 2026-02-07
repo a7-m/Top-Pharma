@@ -160,17 +160,32 @@ async function deleteVideo(videoId) {
     if (!confirm('هل أنت متأكد من حذف هذا الفيديو؟')) return;
     
     try {
-        const { error } = await supabaseClient
-            .from('videos')
-            .delete()
-            .eq('id', videoId);
-            
-        if (error) throw error;
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+            alert('يجب تسجيل الدخول أولاً');
+            return;
+        }
+
+        // Call backend API to delete from Cloudinary and Supabase
+        const response = await fetch(`${BACKEND_URL}/api/admin/delete-video`, {
+            method: 'POST', // Using POST as defined in backend
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ videoId })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'فشل حذف الفيديو');
+        }
         
         alert('تم حذف الفيديو بنجاح');
         window.location.reload();
     } catch (error) {
         console.error('Error deleting video:', error);
-        alert('حدث خطأ أثناء الحذف');
+        alert('حدث خطأ أثناء الحذف: ' + error.message);
     }
 }
