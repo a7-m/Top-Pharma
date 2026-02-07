@@ -116,7 +116,7 @@ async function uploadToGoogleDrive(file, onProgress) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
 
-            xhr.open('POST', `${BACKEND_URL}/api/upload/google-drive`, true);
+            xhr.open('POST', `${BACKEND_URL}/api/upload/cloud`, true);
             xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
 
             // Upload progress
@@ -154,7 +154,7 @@ async function uploadToGoogleDrive(file, onProgress) {
             };
 
             xhr.onerror = () => {
-                reject(new Error('خطأ في الشبكة أثناء الرفع'));
+                reject(new Error('خطأ في الشبكة أثناء الرفع. تأكد من تعطيل Ad Blocker أو Privacy Extensions.'));
             };
 
             xhr.send(formData);
